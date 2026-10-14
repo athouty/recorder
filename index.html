@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>高音直笛互動學習教室 - 即時音準與指法偵測</title>
+  <title>高音直笛互動學習教室 - 即時音準與完整半音階指法偵測</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,12 +61,18 @@
         <h1 class="text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-800 bg-clip-text text-transparent">
           高音直笛互動音準教室
         </h1>
-        <p class="text-xs sm:text-sm text-slate-500 font-medium">即時麥克風音高辨識 • 標準指法指南 • 趣味過關挑戰</p>
+        <p class="text-xs sm:text-sm text-slate-500 font-medium">即時音高辨識 • 完整半音音階指法庫 • 趣味挑戰關卡</p>
       </div>
     </div>
 
-    <!-- Mode and Mic Controls -->
+    <!-- Mode, Mic Controls and Home Link -->
     <div class="flex flex-wrap items-center gap-2">
+      <!-- 首頁按鈕 -->
+      <a href="https://www.athouty.net" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-white/80 hover:bg-white text-slate-700 hover:text-teal-700 font-bold text-xs shadow-sm border border-slate-200 flex items-center gap-1.5 transition active:scale-95">
+        <i class="fa-solid fa-house"></i>
+        <span>首頁</span>
+      </a>
+
       <!-- Fingering System Toggle -->
       <div class="bg-white/80 p-1 rounded-xl shadow-sm border border-slate-200 flex items-center text-xs font-bold text-slate-600">
         <button id="btn-baroque" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white transition">巴洛克式 (B)</button>
@@ -235,10 +241,13 @@
         </div>
       </section>
 
-      <!-- Note Quick Select Matrix -->
+      <!-- Note Quick Select Matrix (Full Chromatic Scale) -->
       <section class="glass-card rounded-3xl p-5">
-        <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">高音直笛常用音域點選 (點擊查看指法與聽音)</h3>
-        <div id="notes-quick-bar" class="grid grid-cols-5 sm:grid-cols-9 gap-1.5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">高音直笛完整音域指法矩陣 (C5 ~ D7 全半音階)</h3>
+          <span class="text-[11px] text-slate-400 font-medium">點擊任一音查看完整指法與聽音</span>
+        </div>
+        <div id="notes-quick-bar" class="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-9 gap-1.5 max-h-72 overflow-y-auto p-1">
           <!-- Filled by JS -->
         </div>
       </section>
@@ -377,9 +386,9 @@
             <span>圖例說明：</span>
             <span class="inline-flex items-center gap-1"><span class="w-3.5 h-3.5 rounded-full bg-slate-800 inline-block"></span> 按緊 (閉孔)</span>
             <span class="inline-flex items-center gap-1"><span class="w-3.5 h-3.5 rounded-full bg-white border border-slate-400 inline-block"></span> 放開 (開孔)</span>
-            <span class="inline-flex items-center gap-1"><span class="w-3.5 h-3.5 rounded-full bg-amber-500 inline-block"></span> 半開拇指孔</span>
+            <span class="inline-flex items-center gap-1"><span class="w-3.5 h-3.5 rounded-full bg-amber-500 inline-block"></span> 拇指泛音半孔</span>
           </div>
-          <div id="fingering-text-summary" class="text-slate-500 leading-relaxed">
+          <div id="fingering-text-summary" class="text-slate-500 leading-relaxed font-mono text-[11px]">
             孔 0 (閉) | 孔 1 (閉) | 孔 2 (閉) | 孔 3 (閉) | 孔 4 (開) | 孔 5 (開) | 孔 6 (開) | 孔 7 (開)
           </div>
         </div>
@@ -389,10 +398,9 @@
 
   <script>
     /*
-     * Soprano Recorder standard frequencies and fingerings
-     * Notation: 0 = Thumb, 1-3 = Left Hand, 4-7 = Right Hand
-     * State values: 1 = closed, 0 = open, 0.5 = half hole
-     * 6 & 7 have double holes: [6a, 6b], [7a, 7b]
+     * Soprano Recorder Complete Chromatic Scale (C5 to D7)
+     * Format: [0, 1, 2, 3, 4, 5, 6a, 6b, 7a, 7b]
+     * 1 = closed, 0 = open, 0.5 = half hole (thumb pinch)
      */
     const NOTES_DATA = [
       {
@@ -400,26 +408,49 @@
         name: "C5",
         solfege: "Do (低音ㄉㄛ)",
         freq: 523.25,
-        fingeringB: [1, 1, 1, 1, 1, 1, 1, 1], // [0, 1, 2, 3, 4, 5, 6, 7]
-        fingeringG: [1, 1, 1, 1, 1, 1, 1, 1],
-        tip: "全部手指閉合，吹奏需氣流溫和飽滿避免破音。"
+        accidental: false,
+        fingeringB: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        fingeringG: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        tip: "全部手指完全閉合，氣流需極度溫和飽滿避免翻高音。"
+      },
+      {
+        id: "C#5",
+        name: "C#5 / Db5",
+        solfege: "Di (升Do)",
+        freq: 554.37,
+        accidental: true,
+        fingeringB: [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        fingeringG: [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        tip: "右小指第 7 孔只按大孔（放開小孔），氣流微弱集中。"
       },
       {
         id: "D5",
         name: "D5",
-        solfege: "Re (ㄖㄨㄝ)",
+        solfege: "Re (低音ㄖㄨㄝ)",
         freq: 587.33,
-        fingeringB: [1, 1, 1, 1, 1, 1, 1, 0],
-        fingeringG: [1, 1, 1, 1, 1, 1, 1, 0],
-        tip: "放開右小指第 7 孔，其餘孔緊閉。"
+        accidental: false,
+        fingeringB: [1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+        fingeringG: [1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+        tip: "放開第 7 雙孔，其餘孔緊閉。"
+      },
+      {
+        id: "D#5",
+        name: "D#5 / Eb5",
+        solfege: "Ri (升Re)",
+        freq: 622.25,
+        accidental: true,
+        fingeringB: [1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+        fingeringG: [1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+        tip: "右手無名指第 6 孔只按大孔，第 7 孔全開。"
       },
       {
         id: "E5",
         name: "E5",
         solfege: "Mi (ㄇㄧ)",
         freq: 659.25,
-        fingeringB: [1, 1, 1, 1, 1, 1, 0, 0],
-        fingeringG: [1, 1, 1, 1, 1, 1, 0, 0],
+        accidental: false,
+        fingeringB: [1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+        fingeringG: [1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
         tip: "放開第 6、7 孔，氣流平穩放鬆。"
       },
       {
@@ -427,44 +458,69 @@
         name: "F5",
         solfege: "Fa (ㄈㄚ)",
         freq: 698.46,
-        fingeringB: [1, 1, 1, 1, 1, 0, 1, 1], // Baroque fork fingering
-        fingeringG: [1, 1, 1, 1, 1, 0, 0, 0], // German simple fingering
-        tip: "注意巴洛克式與德式指法不同（巴洛克式需按 4、6、7 孔叉狀指法）。"
+        accidental: false,
+        fingeringB: [1, 1, 1, 1, 1, 0, 1, 1, 1, 1], // Baroque fork
+        fingeringG: [1, 1, 1, 1, 1, 0, 0, 0, 0, 0], // German straight
+        tip: "巴洛克式需用叉狀指法（按 1,2,3,4,6,7 孔，開第 5 孔）；德式僅按 1,2,3,4 孔。"
       },
       {
         id: "F#5",
-        name: "F#5",
+        name: "F#5 / Gb5",
         solfege: "Fi (升Fa)",
         freq: 739.99,
-        fingeringB: [1, 1, 1, 1, 0, 1, 1, 0],
-        fingeringG: [1, 1, 1, 1, 0, 1, 1, 0],
-        tip: "升 Fa 指法，右手中指第 5 孔與無名指第 6 孔按緊。"
+        accidental: true,
+        fingeringB: [1, 1, 1, 1, 0, 1, 1, 1, 0, 0],
+        fingeringG: [1, 1, 1, 1, 0, 1, 1, 1, 0, 0],
+        tip: "升 Fa 指法：右手按第 5 孔與第 6 孔，開第 4 孔。"
       },
       {
         id: "G5",
         name: "G5",
         solfege: "Sol (ㄙㄛ)",
         freq: 783.99,
-        fingeringB: [1, 1, 1, 1, 0, 0, 0, 0],
-        fingeringG: [1, 1, 1, 1, 0, 0, 0, 0],
-        tip: "右手完全放開，左手按 0、1、2、3 孔。最穩定的基礎音！"
+        accidental: false,
+        fingeringB: [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+        fingeringG: [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+        tip: "右手完全放開，左手按 0、1、2、3 孔。最穩定的發聲基礎音！"
+      },
+      {
+        id: "G#5",
+        name: "G#5 / Ab5",
+        solfege: "Si (升Sol)",
+        freq: 830.61,
+        accidental: true,
+        fingeringB: [1, 1, 1, 0, 1, 1, 1, 0, 0, 0],
+        fingeringG: [1, 1, 1, 0, 1, 1, 0, 0, 0, 0],
+        tip: "升 Sol：左手中指放開第 3 孔，右手指法輔助調準。"
       },
       {
         id: "A5",
         name: "A5",
         solfege: "La (ㄌㄚ)",
         freq: 880.00,
-        fingeringB: [1, 1, 1, 0, 0, 0, 0, 0],
-        fingeringG: [1, 1, 1, 0, 0, 0, 0, 0],
-        tip: "左手按 0、1、2 孔（拇、食、中）。"
+        accidental: false,
+        fingeringB: [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        fingeringG: [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "左手按 0、1、2 孔（左手拇、食、中）。"
+      },
+      {
+        id: "A#5",
+        name: "A#5 / Bb5",
+        solfege: "Li (降Si / 升La)",
+        freq: 932.33,
+        accidental: true,
+        fingeringB: [1, 1, 0, 1, 1, 0, 0, 0, 0, 0], // Baroque Bb
+        fingeringG: [1, 1, 0, 1, 1, 1, 1, 1, 0, 0], // German Bb
+        tip: "降 Si（Bb）巴洛克指法為 0, 1, 3, 4 孔；音準清脆亮麗。"
       },
       {
         id: "B5",
         name: "B5",
         solfege: "Si (ㄒㄧ)",
         freq: 987.77,
-        fingeringB: [1, 1, 0, 0, 0, 0, 0, 0],
-        fingeringG: [1, 1, 0, 0, 0, 0, 0, 0],
+        accidental: false,
+        fingeringB: [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        fingeringG: [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
         tip: "左手僅按 0、1 孔，氣流柔和集中。"
       },
       {
@@ -472,27 +528,140 @@
         name: "C6",
         solfege: "Do (高音ㄉㄛ)",
         freq: 1046.50,
-        fingeringB: [1, 0, 1, 0, 0, 0, 0, 0],
-        fingeringG: [1, 0, 1, 0, 0, 0, 0, 0],
-        tip: "按 0、2 孔（左手拇指與中指，放開第 1 孔）。"
+        accidental: false,
+        fingeringB: [1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        fingeringG: [1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "按 0、2 孔（左手拇指與中指，食指放開）。"
+      },
+      {
+        id: "C#6",
+        name: "C#6 / Db6",
+        solfege: "Di (高音升Do)",
+        freq: 1108.73,
+        accidental: true,
+        fingeringB: [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        fingeringG: [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "拇指孔放開！僅按左手食指與中指第 1、2 孔。"
       },
       {
         id: "D6",
         name: "D6",
         solfege: "Re (高音ㄖㄨㄝ)",
         freq: 1174.66,
-        fingeringB: [0, 0, 1, 0, 0, 0, 0, 0],
-        fingeringG: [0, 0, 1, 0, 0, 0, 0, 0],
-        tip: "放開後方拇指孔！僅按左手中指第 2 孔。"
+        accidental: false,
+        fingeringB: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        fingeringG: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "完全放開拇指孔！僅按左手中指第 2 孔。"
+      },
+      {
+        id: "D#6",
+        name: "D#6 / Eb6",
+        solfege: "Ri (高音升Re)",
+        freq: 1244.51,
+        accidental: true,
+        fingeringB: [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+        fingeringG: [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+        tip: "拇指開，開第 1 孔，閉 2,3,4,5,6 孔。"
       },
       {
         id: "E6",
         name: "E6",
         solfege: "Mi (高音ㄇㄧ)",
         freq: 1318.51,
-        fingeringB: [0.5, 1, 1, 1, 1, 1, 0, 0], // Half thumb hole
-        fingeringG: [0.5, 1, 1, 1, 1, 1, 0, 0],
-        tip: "拇指孔開一半(指甲切孔)，氣流需稍快集中！"
+        accidental: false,
+        fingeringB: [0.5, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+        fingeringG: [0.5, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+        tip: "拇指孔開半孔（以指甲側邊切孔留微隙），氣流需稍快集中！"
+      },
+      {
+        id: "F6",
+        name: "F6",
+        solfege: "Fa (高音ㄈㄚ)",
+        freq: 1396.91,
+        accidental: false,
+        fingeringB: [0.5, 1, 1, 1, 1, 0, 1, 1, 0, 0],
+        fingeringG: [0.5, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+        tip: "拇指半孔，巴洛克式按 1,2,3,4,6 孔；德式按 1,2,3,4 孔。"
+      },
+      {
+        id: "F#6",
+        name: "F#6 / Gb6",
+        solfege: "Fi (高音升Fa)",
+        freq: 1479.98,
+        accidental: true,
+        fingeringB: [0.5, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+        fingeringG: [0.5, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+        tip: "拇指半孔，按第 1,2,3,5 孔（放開第 4 孔）。"
+      },
+      {
+        id: "G6",
+        name: "G6",
+        solfege: "Sol (高音ㄙㄛ)",
+        freq: 1567.98,
+        accidental: false,
+        fingeringB: [0.5, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+        fingeringG: [0.5, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+        tip: "拇指半孔，按 1,2,3 孔，右手全開，氣流速度需快。"
+      },
+      {
+        id: "G#6",
+        name: "G#6 / Ab6",
+        solfege: "Si (高音升Sol)",
+        freq: 1661.22,
+        accidental: true,
+        fingeringB: [0.5, 1, 1, 0, 1, 0, 0, 0, 0, 0],
+        fingeringG: [0.5, 1, 1, 0, 1, 0, 0, 0, 0, 0],
+        tip: "拇指半孔，按 1, 2, 4 孔（開 3 孔）。"
+      },
+      {
+        id: "A6",
+        name: "A6",
+        solfege: "La (高音ㄌㄚ)",
+        freq: 1760.00,
+        accidental: false,
+        fingeringB: [0.5, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        fingeringG: [0.5, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "拇指半孔，僅按左手第 1、2 孔，氣流集中快速。"
+      },
+      {
+        id: "A#6",
+        name: "A#6 / Bb6",
+        solfege: "Li (超高音降Si)",
+        freq: 1864.66,
+        accidental: true,
+        fingeringB: [0.5, 1, 1, 0, 1, 1, 1, 1, 0, 0],
+        fingeringG: [0.5, 1, 1, 0, 1, 1, 1, 1, 0, 0],
+        tip: "超高音區，需穩定的口型支撐與準確的半拇指孔開度。"
+      },
+      {
+        id: "B6",
+        name: "B6",
+        solfege: "Si (超高音ㄒㄧ)",
+        freq: 1975.53,
+        accidental: false,
+        fingeringB: [0.5, 1, 0, 1, 1, 0, 1, 1, 0, 0],
+        fingeringG: [0.5, 1, 0, 1, 1, 0, 1, 1, 0, 0],
+        tip: "拇指半孔，按 1, 3, 4, 6 孔。"
+      },
+      {
+        id: "C7",
+        name: "C7",
+        solfege: "Do (倍高音ㄉㄛ)",
+        freq: 2093.00,
+        accidental: false,
+        fingeringB: [0.5, 1, 0, 1, 1, 1, 0, 0, 1, 1],
+        fingeringG: [0.5, 1, 0, 1, 1, 1, 0, 0, 1, 1],
+        tip: "高音域泛音音符，需強而穩的腹部丹田氣息支持。"
+      },
+      {
+        id: "D7",
+        name: "D7",
+        solfege: "Re (倍高音ㄖㄨㄝ)",
+        freq: 2349.32,
+        accidental: false,
+        fingeringB: [0.5, 0, 1, 1, 0, 1, 1, 1, 0, 0],
+        fingeringG: [0.5, 0, 1, 1, 0, 1, 1, 1, 0, 0],
+        tip: "直笛最高音域挑戰，開第 1 孔，按 2, 3, 5, 6 孔。"
       }
     ];
 
@@ -502,23 +671,25 @@
     let isListening = false;
     let currentSystem = 'B'; // 'B' (Baroque) or 'G' (German)
     let currentMode = 'practice'; // 'practice' or 'challenge'
-    let currentActiveNote = NOTES_DATA[5]; // Default to G5 (Sol)
+    let currentActiveNote = NOTES_DATA[7]; // Default to G5 (Sol)
 
     // Challenge Mode State
     let challengeIndex = 0;
     const challengeQueue = [
-      NOTES_DATA[5], // G5 (Sol)
-      NOTES_DATA[6], // A5 (La)
-      NOTES_DATA[7], // B5 (Si)
-      NOTES_DATA[8], // C6 (High Do)
-      NOTES_DATA[9], // D6 (High Re)
-      NOTES_DATA[2], // E5 (Mi)
-      NOTES_DATA[1], // D5 (Re)
-      NOTES_DATA[0], // C5 (Low Do)
-      NOTES_DATA[3]  // F5 (Fa)
+      NOTES_DATA[7],  // G5 (Sol)
+      NOTES_DATA[9],  // A5 (La)
+      NOTES_DATA[11], // B5 (Si)
+      NOTES_DATA[12], // C6 (High Do)
+      NOTES_DATA[14], // D6 (High Re)
+      NOTES_DATA[4],  // E5 (Mi)
+      NOTES_DATA[2],  // D5 (Re)
+      NOTES_DATA[0],  // C5 (Low Do)
+      NOTES_DATA[5],  // F5 (Fa)
+      NOTES_DATA[6],  // F#5 (Fi)
+      NOTES_DATA[10], // Bb5
+      NOTES_DATA[16]  // E6
     ];
     let challengeScore = 0;
-    let pitchHoldTimer = null;
     let pitchHoldAccumulatedMs = 0;
     const REQUIRED_HOLD_MS = 1200; // Hold pitch in tune for 1.2s to win
     let lastPitchTime = performance.now();
@@ -559,26 +730,19 @@
     const btnPrevLevel = document.getElementById('btn-prev-level');
     const btnNextLevel = document.getElementById('btn-next-level');
 
-    /*
-     * Autocorrelation pitch detection algorithm:
-     * Finds the primary repeating period (lag) in an audio buffer.
-     * Well-suited for monophonic wooden flute / recorder woodwind instruments.
-     */
     function autoCorrelate(buffer, sampleRate) {
       const SIZE = buffer.length;
 
-      // Step 1: Calculate Root Mean Square (RMS) energy to reject silence & noise
       let sumSquares = 0;
       for (let i = 0; i < SIZE; i++) {
         const val = buffer[i];
         sumSquares += val * val;
       }
       const rms = Math.sqrt(sumSquares / SIZE);
-      if (rms < 0.015) { // Silence or background noise threshold
+      if (rms < 0.015) {
         return { freq: -1, rms: rms };
       }
 
-      // Step 2: Trim buffer to zero crossings to minimize boundary artifacts
       let r1 = 0, r2 = SIZE - 1;
       const thres = 0.2;
       for (let i = 0; i < SIZE / 2; i++) {
@@ -596,14 +760,12 @@
       const trimmedBuffer = buffer.slice(r1, r2);
       const c = new Float32Array(trimmedBuffer.length).fill(0);
 
-      // Step 3: Compute autocorrelation coefficients
       for (let i = 0; i < trimmedBuffer.length; i++) {
         for (let j = 0; j < trimmedBuffer.length - i; j++) {
           c[i] = c[i] + trimmedBuffer[j] * trimmedBuffer[j + i];
         }
       }
 
-      // Step 4: Skip the zero-lag peak and find the first local maximum
       let d = 0;
       while (c[d] > c[d + 1]) {
         d++;
@@ -620,7 +782,6 @@
 
       if (maxpos === -1 || maxval === 0) return { freq: -1, rms: rms };
 
-      // Step 5: Parabolic interpolation for sub-bin frequency accuracy
       let T0 = maxpos;
       if (maxpos > 0 && maxpos < c.length - 1) {
         const alpha = c[maxpos - 1];
@@ -636,18 +797,13 @@
       return { freq: frequency, rms: rms };
     }
 
-    /*
-     * Calculate closest note and cents deviation (-50 to +50 cents)
-     */
     function frequencyToPitchDetails(freq) {
       if (freq <= 0) return null;
 
-      // Note number relative to A4 (440Hz)
       const noteNum = 12 * (Math.log(freq / 440) / Math.log(2));
       const roundedNote = Math.round(noteNum);
       const cents = Math.round((noteNum - roundedNote) * 100);
 
-      // Match closest note in our recorder dictionary
       let closestNote = null;
       let minFreqDiff = Infinity;
       for (const note of NOTES_DATA) {
@@ -658,8 +814,8 @@
         }
       }
 
-      // Check if frequency is within reasonable soprano recorder window (~480Hz to 1500Hz)
-      const inRecorderRange = freq >= 480 && freq <= 1500;
+      // Allow pitch detection across entire recorder range up to high D7
+      const inRecorderRange = freq >= 480 && freq <= 2500;
 
       return {
         freq: Math.round(freq * 10) / 10,
@@ -673,14 +829,21 @@
       notesQuickBar.innerHTML = '';
       NOTES_DATA.forEach((note) => {
         const btn = document.createElement('button');
-        btn.className = `p-2 rounded-xl text-center border font-bold transition flex flex-col items-center justify-center text-xs ${
-          note.id === currentActiveNote.id 
-            ? 'bg-teal-600 text-white border-teal-700 shadow-md scale-105' 
-            : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-        }`;
+        const isActive = note.id === currentActiveNote.id;
+        
+        let colorClasses = '';
+        if (isActive) {
+          colorClasses = 'bg-teal-600 text-white border-teal-700 shadow-md ring-2 ring-teal-400 scale-[1.03] z-10';
+        } else if (note.accidental) {
+          colorClasses = 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300';
+        } else {
+          colorClasses = 'bg-white hover:bg-teal-50 text-slate-800 border-slate-200';
+        }
+
+        btn.className = `p-1.5 rounded-xl text-center border font-bold transition flex flex-col items-center justify-center text-xs ${colorClasses}`;
         btn.innerHTML = `
-          <span class="text-sm font-black">${note.name}</span>
-          <span class="text-[10px] opacity-80">${note.solfege.split(' ')[0]}</span>
+          <span class="text-xs font-black">${note.name.split('/')[0].trim()}</span>
+          <span class="text-[9px] opacity-75 truncate max-w-full">${note.solfege.split(' ')[0]}</span>
         `;
         btn.addEventListener('click', () => {
           setActiveNote(note);
@@ -690,12 +853,11 @@
       });
     }
 
-    // Update Recorder SVG holes visual status
+    // Render 10 holes: [0, 1, 2, 3, 4, 5, 6a, 6b, 7a, 7b]
     function renderRecorderFingering(note) {
       if (!note) return;
       const fingerings = currentSystem === 'B' ? note.fingeringB : note.fingeringG;
 
-      // Update Labels
       currentFingeringLabel.textContent = `當前指法: ${note.name} (${note.solfege}) - ${note.tip}`;
       systemBadge.textContent = currentSystem === 'B' ? '巴洛克式 (B)' : '德式 (G)';
 
@@ -704,7 +866,7 @@
       if (fingerings[0] === 1) {
         h0.setAttribute('fill', '#1e293b'); // closed
       } else if (fingerings[0] === 0.5) {
-        h0.setAttribute('fill', '#f59e0b'); // half open
+        h0.setAttribute('fill', '#f59e0b'); // half open thumb
       } else {
         h0.setAttribute('fill', '#f8fafc'); // open
       }
@@ -719,43 +881,28 @@
         }
       }
 
-      // Hole 6 (Double: 6a, 6b)
+      // Hole 6 (Double holes: 6a, 6b) -> fingerings[6], fingerings[7]
       const h6a = document.getElementById('hole-6a');
       const h6b = document.getElementById('hole-6b');
-      if (fingerings[6] === 1) {
-        h6a.setAttribute('fill', '#1e293b');
-        h6b.setAttribute('fill', '#1e293b');
-      } else if (fingerings[6] === 0.5) {
-        h6a.setAttribute('fill', '#1e293b');
-        h6b.setAttribute('fill', '#f8fafc');
-      } else {
-        h6a.setAttribute('fill', '#f8fafc');
-        h6b.setAttribute('fill', '#f8fafc');
-      }
+      h6a.setAttribute('fill', fingerings[6] === 1 ? '#1e293b' : '#f8fafc');
+      h6b.setAttribute('fill', fingerings[7] === 1 ? '#1e293b' : '#f8fafc');
 
-      // Hole 7 (Double: 7a, 7b)
+      // Hole 7 (Double holes: 7a, 7b) -> fingerings[8], fingerings[9]
       const h7a = document.getElementById('hole-7a');
       const h7b = document.getElementById('hole-7b');
-      if (fingerings[7] === 1) {
-        h7a.setAttribute('fill', '#1e293b');
-        h7b.setAttribute('fill', '#1e293b');
-      } else if (fingerings[7] === 0.5) {
-        h7a.setAttribute('fill', '#1e293b');
-        h7b.setAttribute('fill', '#f8fafc');
-      } else {
-        h7a.setAttribute('fill', '#f8fafc');
-        h7b.setAttribute('fill', '#f8fafc');
-      }
+      h7a.setAttribute('fill', fingerings[8] === 1 ? '#1e293b' : '#f8fafc');
+      h7b.setAttribute('fill', fingerings[9] === 1 ? '#1e293b' : '#f8fafc');
 
       // Update text summary description
+      const names = ['0', '1', '2', '3', '4', '5', '6大', '6小', '7大', '7小'];
       const desc = fingerings.map((state, idx) => {
-        let label = `孔${idx}: `;
-        if (state === 1) label += '●閉';
-        else if (state === 0.5) label += '◐半';
-        else label += '○開';
-        return label;
-      }).join(' | ');
-      fingeringTextSummary.innerHTML = `<strong>${note.name} 指法狀態：</strong> ${desc}<br><span class="text-teal-700 font-semibold mt-1 inline-block">💡 技巧提示：${note.tip}</span>`;
+        let sym = '○';
+        if (state === 1) sym = '●';
+        else if (state === 0.5) sym = '◐';
+        return `${names[idx]}:${sym}`;
+      }).join(' ');
+
+      fingeringTextSummary.innerHTML = `<strong>${note.name} 狀態：</strong> ${desc}<br><span class="text-teal-700 font-semibold mt-1 inline-block">💡 技巧提示：${note.tip}</span>`;
     }
 
     function setActiveNote(note) {
@@ -764,37 +911,29 @@
       populateQuickNotesBar();
     }
 
-    /*
-     * Web Audio API Synthesizer with gentle recorder-like envelope
-     * Has subtle harmonics for natural wooden flute timbre
-     */
     function playReferenceTone(frequency, duration = 1.0) {
       try {
         const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
         const synthCtx = new AudioCtxClass();
         const now = synthCtx.currentTime;
 
-        // Primary fundamental oscillator
         const osc1 = synthCtx.createOscillator();
         osc1.type = 'sine';
         osc1.frequency.setValueAtTime(frequency, now);
 
-        // Overtone harmonic (2nd harmonic) for woodwind warmth
         const osc2 = synthCtx.createOscillator();
         osc2.type = 'triangle';
         osc2.frequency.setValueAtTime(frequency * 2, now);
 
-        // Gain Nodes & Envelopes
         const gainNode = synthCtx.createGain();
         const gainOvertone = synthCtx.createGain();
 
-        gainOvertone.gain.setValueAtTime(0.08, now);
+        gainOvertone.gain.setValueAtTime(0.06, now);
 
-        // Smooth attack and release
         gainNode.gain.setValueAtTime(0.0001, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.3, now + 0.08); // Attack
-        gainNode.gain.exponentialRampToValueAtTime(0.2, now + 0.25); // Decay / Sustain
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration); // Release
+        gainNode.gain.exponentialRampToValueAtTime(0.28, now + 0.08);
+        gainNode.gain.exponentialRampToValueAtTime(0.18, now + 0.25);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
         osc1.connect(gainNode);
         osc2.connect(gainOvertone);
@@ -815,7 +954,6 @@
         const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioCtxClass();
 
-        // Prompt for mic stream
         micStream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: false,
@@ -828,11 +966,10 @@
         analyserNode = audioCtx.createAnalyser();
         analyserNode.fftSize = 2048;
 
-        // Bandpass filter to focus on Soprano Recorder frequency spectrum (~450Hz to ~1600Hz)
         const biquadFilter = audioCtx.createBiquadFilter();
         biquadFilter.type = 'bandpass';
-        biquadFilter.frequency.value = 850;
-        biquadFilter.Q.value = 0.7;
+        biquadFilter.frequency.value = 1000;
+        biquadFilter.Q.value = 0.6;
 
         sourceNode.connect(biquadFilter);
         biquadFilter.connect(analyserNode);
@@ -841,7 +978,6 @@
         updateMicButtonUI(true);
         updateStatusBadge('聆聽吹奏中...', 'bg-emerald-500', 'bg-emerald-50 text-emerald-800');
 
-        // Start processing loop
         processAudioLoop();
       } catch (error) {
         console.error('Microphone access denied or error:', error);
@@ -901,17 +1037,13 @@
       if (!isListening || !analyserNode) return;
 
       analyserNode.getFloatTimeDomainData(buffer);
-
-      // Draw mini oscilloscope waveform
       drawWaveform(buffer);
 
-      // Detect Pitch
       const result = autoCorrelate(buffer, audioCtx.sampleRate);
       const now = performance.now();
       const deltaTime = now - lastPitchTime;
       lastPitchTime = now;
 
-      // Update volume meter
       const volPercent = Math.min(100, Math.round(result.rms * 350));
       volumeMeterBar.style.width = `${volPercent}%`;
 
@@ -921,22 +1053,17 @@
         if (pitch && pitch.inRecorderRange && pitch.closestNote) {
           updatePitchUI(pitch);
 
-          // If in practice mode, optionally follow the played note
           if (currentMode === 'practice') {
             setActiveNote(pitch.closestNote);
           } else {
-            // Challenge Game mode logic
             handleChallengePitch(pitch, deltaTime);
           }
         } else {
-          // Pitch outside soprano recorder register
           tunerFeedback.textContent = '聲音頻率超出高音直笛範圍';
           tunerFeedback.className = 'mt-1 font-bold text-xs text-amber-600 px-3 py-1 rounded-full bg-amber-50 inline-block';
         }
       } else {
-        // No distinct sound
         if (currentMode === 'challenge') {
-          // decay challenge hold slowly
           pitchHoldAccumulatedMs = Math.max(0, pitchHoldAccumulatedMs - deltaTime * 0.8);
           updateChallengeProgress();
         }
@@ -945,7 +1072,6 @@
       requestAnimationFrame(processAudioLoop);
     }
 
-    // Draw live waveform on canvas
     function drawWaveform(timeData) {
       const width = waveformCanvas.width = waveformCanvas.clientWidth * window.devicePixelRatio || 300;
       const height = waveformCanvas.height = 48 * window.devicePixelRatio || 48;
@@ -958,7 +1084,7 @@
       const sliceWidth = width / timeData.length;
       let x = 0;
 
-      for (let i = 0; i < timeData.length; i += 4) { // step by 4 for lightweight drawing
+      for (let i = 0; i < timeData.length; i += 4) {
         const v = timeData[i];
         const y = (v + 1) / 2 * height;
         if (i === 0) {
@@ -974,23 +1100,18 @@
     function updatePitchUI(pitch) {
       const { freq, cents, closestNote } = pitch;
 
-      // Rotate needle: -50 cents = -45 deg, +50 cents = +45 deg
       const clampedCents = Math.max(-50, Math.min(50, cents));
       const needleDeg = (clampedCents / 50) * 45;
       tunerNeedle.style.transform = `rotate(${needleDeg}deg)`;
 
-      // Big Note Badge Update
-      detectedNoteName.textContent = closestNote.name;
+      detectedNoteName.textContent = closestNote.name.split('/')[0].trim();
       detectedSolfege.textContent = closestNote.solfege;
       freqText.textContent = `目前頻率: ${freq} Hz (目標: ${closestNote.freq} Hz)`;
 
-      // Cents sign formatting
       const sign = cents > 0 ? `+${cents}` : `${cents}`;
       centsText.textContent = `${sign} ¢`;
 
-      // Status intonation coloring & comments
       if (Math.abs(cents) <= 10) {
-        // Perfectly in-tune!
         centsText.className = 'text-sm font-mono font-black text-emerald-600';
         noteBadge.className = 'w-32 h-32 rounded-3xl bg-emerald-50 border-4 border-emerald-400 flex flex-col items-center justify-center shadow-lg shadow-emerald-400/20 transition duration-150 pop-in';
         detectedNoteName.className = 'text-4xl font-black text-emerald-700 tracking-tight';
@@ -998,7 +1119,6 @@
         tunerFeedback.innerHTML = `<span class="text-emerald-700 font-black">🎉 音準極佳！(Perfect)</span>`;
         tunerFeedback.className = 'mt-1 font-bold text-sm text-emerald-700 px-4 py-1 rounded-full bg-emerald-100 inline-block shadow-sm';
       } else if (cents > 10) {
-        // Sharp (Too high)
         centsText.className = 'text-sm font-mono font-black text-amber-600';
         noteBadge.className = 'w-32 h-32 rounded-3xl bg-amber-50 border-4 border-amber-300 flex flex-col items-center justify-center shadow transition duration-150';
         detectedNoteName.className = 'text-4xl font-black text-amber-700 tracking-tight';
@@ -1006,12 +1126,11 @@
         tunerFeedback.innerHTML = `<span class="text-amber-800 font-bold">⬆️ 音偏高，氣流放柔或嘴唇微放鬆</span>`;
         tunerFeedback.className = 'mt-1 font-bold text-sm text-amber-800 px-3 py-1 rounded-full bg-amber-100 inline-block';
       } else {
-        // Flat (Too low)
         centsText.className = 'text-sm font-mono font-black text-sky-600';
         noteBadge.className = 'w-32 h-32 rounded-3xl bg-sky-50 border-4 border-sky-300 flex flex-col items-center justify-center shadow transition duration-150';
         detectedNoteName.className = 'text-4xl font-black text-sky-700 tracking-tight';
         detectedSolfege.className = 'text-sm font-bold text-sky-600 mt-0.5';
-        tunerFeedback.innerHTML = `<span class="text-sky-800 font-bold">⬇️ 音偏低，氣流稍加集中或檢查按孔是否漏氣</span>`;
+        tunerFeedback.innerHTML = `<span class="text-sky-800 font-bold">⬇️ 音偏低，氣流稍加集中或檢查指孔是否漏氣</span>`;
         tunerFeedback.className = 'mt-1 font-bold text-sm text-sky-800 px-3 py-1 rounded-full bg-sky-100 inline-block';
       }
     }
@@ -1022,11 +1141,10 @@
       challengeIndex = index;
       const target = challengeQueue[challengeIndex];
 
-      targetNoteBadge.textContent = target.name;
+      targetNoteBadge.textContent = target.name.split('/')[0].trim();
       targetNoteSolfege.textContent = `(${target.solfege.split(' ')[0]})`;
       targetNoteTip.textContent = target.tip;
 
-      // Point the recorder visualization to target note for student instruction
       setActiveNote(target);
       pitchHoldAccumulatedMs = 0;
       updateChallengeProgress();
@@ -1035,7 +1153,6 @@
     function handleChallengePitch(pitch, deltaTime) {
       const target = challengeQueue[challengeIndex];
 
-      // Check if the detected note matches target AND is reasonably in-tune (within 20 cents)
       const isCorrectNote = pitch.closestNote.id === target.id;
       const isInTune = Math.abs(pitch.cents) <= 22;
 
@@ -1045,7 +1162,6 @@
           triggerLevelSuccess();
         }
       } else {
-        // Gradually drop progress if slipping
         pitchHoldAccumulatedMs = Math.max(0, pitchHoldAccumulatedMs - deltaTime * 0.5);
       }
       updateChallengeProgress();
@@ -1069,16 +1185,13 @@
       challengeScore += 10;
       scoreCounter.textContent = challengeScore;
 
-      // Play joyful success chime
       playSuccessSound();
 
-      // Confetti visual feedback on challenge card
       challengeCard.classList.add('ring-4', 'ring-emerald-400', 'bg-emerald-50/50');
       setTimeout(() => {
         challengeCard.classList.remove('ring-4', 'ring-emerald-400', 'bg-emerald-50/50');
       }, 700);
 
-      // Advance to next target note after brief pause
       setChallengeTarget(challengeIndex + 1);
     }
 
@@ -1088,7 +1201,7 @@
         const chimeCtx = new AudioCtxClass();
         const now = chimeCtx.currentTime;
 
-        const chord = [523.25, 659.25, 783.99, 1046.50]; // C Major arpeggio
+        const chord = [523.25, 659.25, 783.99, 1046.50];
         chord.forEach((freq, idx) => {
           const osc = chimeCtx.createOscillator();
           const gain = chimeCtx.createGain();
@@ -1105,12 +1218,11 @@
           osc.stop(now + idx * 0.08 + 0.55);
         });
       } catch (e) {
-        console.warn('Audio chime note failed:', e);
+        console.warn('Audio chime sound failed:', e);
       }
     }
 
     function setupEventListeners() {
-      // Toggle Microphone
       micToggleBtn.addEventListener('click', () => {
         if (!isListening) {
           startMicrophone();
@@ -1119,7 +1231,6 @@
         }
       });
 
-      // System Switch: Baroque vs German
       btnBaroque.addEventListener('click', () => {
         currentSystem = 'B';
         btnBaroque.className = 'px-3 py-1.5 rounded-lg bg-teal-600 text-white transition';
@@ -1134,7 +1245,6 @@
         renderRecorderFingering(currentActiveNote);
       });
 
-      // Mode Switch: Free practice vs Challenge
       modePracticeBtn.addEventListener('click', () => {
         currentMode = 'practice';
         modePracticeBtn.className = 'px-3 py-1.5 rounded-lg bg-teal-600 text-white transition';
@@ -1150,19 +1260,16 @@
         setChallengeTarget(challengeIndex);
       });
 
-      // Reference Sound Button
       btnPlayRef.addEventListener('click', () => {
         if (currentActiveNote) {
           playReferenceTone(currentActiveNote.freq, 1.2);
         }
       });
 
-      // Challenge Buttons
       btnPrevLevel.addEventListener('click', () => setChallengeTarget(challengeIndex - 1));
       btnNextLevel.addEventListener('click', () => setChallengeTarget(challengeIndex + 1));
     }
 
-    // Start on Window Load
     window.onload = function () {
       populateQuickNotesBar();
       renderRecorderFingering(currentActiveNote);
