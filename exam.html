@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>國小高音直笛音準考試評測系統 - 溫馨高肯定版</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Noto Sans TC', 'Fredoka', sans-serif;
+      background: radial-gradient(circle at 10% 20%, #f0fdf4 0%, #e0f2fe 45%, #faf5ff 95%);
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.93);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    }
+    .recorder-shadow {
+      filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.12));
+    }
+    #tuner-needle {
+      transition: transform 0.08s cubic-bezier(0.25, 1, 0.5, 1);
+      transform-origin: 50% 100%;
+    }
+    @keyframes recordingPulse {
+      0% { transform: scale(0.95); opacity: 0.9; }
+      50% { transform: scale(1.15); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.9; }
+    }
+    .recording-dot-anim {
+      animation: recordingPulse 1.2s infinite ease-in-out;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-report, #printable-report * {
+        visibility: visible;
+      }
+      #printable-report {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased p-3 sm:p-6 pb-20">
+
+  <!-- 頂部導航列 -->
+    <!-- 頂部導航列 -->
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-teal-600/30">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-800 via-teal-700 to-cyan-900 bg-clip-text text-transparent">
+          國小直笛音準考試評測系統
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 font-medium">智能動態音準辨識 • 國小暖心加分模型 (主力 80~85分) • 肯定成長引導</p>
+      </div>
+    </div>
+
+    <!-- 首頁與核心控制列 -->
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- 首頁按鈕 -->
+      <a href="https://www.athouty.net" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-teal-700 font-bold text-xs shadow-sm border border-slate-200 flex items-center gap-1.5 transition active:scale-95">
+        <i class="fa-solid fa-house"></i>
+        <span>首頁</span>
+      </a>
+
+      <!-- 巴洛克 / 德式 切換 -->
+      <div class="bg-white/90 p-1 rounded-xl shadow-sm border border-slate-200 flex items-center text-xs font-bold text-slate-600">
+        <button id="btn-baroque" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white transition">巴洛克式 (B)</button>
+        <button id="btn-german" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 transition">德式 (G)</button>
+      </div>
+
+      <!-- 麥克風啟閉按鈕 -->
+      <button id="mic-toggle-btn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-600/25 flex items-center gap-2 active:scale-95 transition">
+        <i class="fa-solid fa-microphone" id="mic-icon"></i>
+        <span id="mic-btn-text">啟動麥克風</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主操作區 -->
+  <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
+
+    <!-- 左欄：考評面板、即時音準盤、速查矩陣 (lg:col-span-7) -->
+    <div class="lg:col-span-7 space-y-6">
+
+      <!-- 教師考評主控 Card -->
+      <section class="glass-card rounded-3xl p-6 relative overflow-hidden border-2 border-emerald-500/30">
+        
+        <!-- 學生基本資料填寫區 -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- 班級座號輸入框 -->
+            <div class="flex items-center gap-1.5">
+              <span class="px-2.5 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-black flex items-center gap-1">
+                <i class="fa-solid fa-id-card"></i> 班級座號
+              </span>
+              <input type="text" id="student-id" placeholder="如: 30101" value="30101" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-teal-500 w-32 sm:w-40 font-mono">
+            </div>
+
+            <!-- 考生姓名輸入框 -->
+            <div class="flex items-center gap-1.5">
+              <span class="px-2.5 py-1.5 rounded-xl bg-teal-100 text-teal-800 text-xs font-black flex items-center gap-1">
+                <i class="fa-solid fa-user"></i> 姓名
+              </span>
+              <input type="text" id="student-name" placeholder="輸入姓名" value="王小明" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-teal-500 w-28 sm:w-32">
+            </div>
+          </div>
+
+          <!-- 考試狀態標記 -->
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-slate-300" id="exam-indicator-dot"></span>
+            <span class="text-xs font-black uppercase tracking-wider text-slate-600" id="exam-status-label">待命（尚未開始）</span>
+          </div>
+        </div>
+
+        <!-- 全新鼓勵性評分說明橫幅 -->
+        <div class="my-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-teal-200">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white shadow-sm border border-teal-300/50 flex items-center justify-center text-teal-600 text-xl shrink-0 mt-0.5">
+              <i class="fa-solid fa-heart"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black text-teal-900 flex items-center gap-2">
+                <span>國小肯定加分模型：只要吹對持穩，分數大幅落於 80 ~ 85 分！</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold">正向學習回饋</span>
+              </div>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                考生吹奏任意指定音或自選樂句，系統自動動態比對音準。綠色精準率達標即可獲評 <strong>80~85 分</strong>的肯定成績，極為卓越者邁入 <strong>90~100 分</strong>！
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 教師三大操作按鈕 -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <!-- 開始考試 -->
+          <button id="btn-start-exam" class="py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-md shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition">
+            <i class="fa-solid fa-play"></i>
+            <span>開始考試 (開始採樣)</span>
+          </button>
+
+          <!-- 結束考試並結算評分 -->
+          <button id="btn-finish-exam" disabled class="py-3 px-4 rounded-2xl bg-slate-200 text-slate-400 font-black text-sm flex items-center justify-center gap-2 cursor-not-allowed transition">
+            <i class="fa-solid fa-flag-checkered"></i>
+            <span>結束考試並結算評分</span>
+          </button>
+
+          <!-- 重新測驗 -->
+          <button id="btn-reset-exam" class="py-3 px-4 rounded-2xl bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition shadow-sm">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>重新測驗 (重置)</span>
+          </button>
+        </div>
+
+        <!-- 即時計時與持穩率 HUD -->
+        <div class="mt-5 p-3.5 rounded-2xl bg-white/80 border border-slate-200 space-y-2">
+          <div class="flex justify-between items-center text-xs font-bold">
+            <span class="text-slate-600 flex items-center gap-1.5">
+              <i class="fa-regular fa-clock text-teal-600"></i>
+              考試總時間 / 有效吹奏發聲時長:
+            </span>
+            <span id="timing-display" class="font-mono text-teal-800 text-sm font-black">0.0 秒 (有效吹奏: 0.0 秒)</span>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center text-xs font-bold mb-1">
+              <span class="flex items-center gap-1.5 text-slate-700">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                綠色精準音準率 (±10¢ 綠區累積時長佔比)
+              </span>
+              <span id="live-green-ratio" class="text-sm font-mono font-black text-emerald-600">0.0 %</span>
+            </div>
+            <div class="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden">
+              <div id="green-progress-bar" class="bg-gradient-to-r from-teal-500 to-emerald-500 h-full w-0 transition-all duration-75"></div>
+            </div>
+          </div>
+
+          <!-- 新版評分標尺 -->
+          <div class="grid grid-cols-4 text-center text-[10px] text-slate-500 font-medium pt-1 border-t border-slate-100">
+            <div>基礎階段 (70~79分)</div>
+            <div class="font-bold text-emerald-700 bg-emerald-50 rounded">穩定達標 (80~85分主力)</div>
+            <div>優良進階 (86~89分)</div>
+            <div class="font-bold text-cyan-800">卓越精準 (90~100分)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 即時音準計盤 & 示波器 -->
+      <section class="glass-card rounded-3xl p-6 relative">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-black text-slate-400 uppercase tracking-wider">即時麥克風音準儀錶（動態自動辨識當前吹奏音）</span>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-slate-400">輸入音量:</span>
+            <div class="w-20 bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div id="volume-meter-bar" class="bg-teal-500 h-full w-0 transition-all duration-75"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 my-2">
+          <!-- 偵測音符徽章 -->
+          <div class="relative flex flex-col items-center justify-center">
+            <div id="note-badge" class="w-28 h-28 rounded-3xl bg-slate-100 border-4 border-slate-200 flex flex-col items-center justify-center shadow-inner transition duration-150">
+              <span id="detected-note-name" class="text-3xl font-black text-slate-400 tracking-tight">--</span>
+              <span id="detected-solfege" class="text-xs font-bold text-slate-400 mt-0.5">尚未吹奏</span>
+            </div>
+            <span id="cents-text" class="text-xs font-mono font-bold text-slate-500 mt-2">0 ¢</span>
+          </div>
+
+          <!-- 圓弧指針錶面 -->
+          <div class="flex-1 w-full max-w-sm flex flex-col items-center">
+            <div class="relative w-64 h-32 flex items-end justify-center overflow-hidden">
+              <svg viewBox="0 0 200 100" class="w-full h-full">
+                <!-- 偏低橙色區 (-50¢ ~ -10¢) -->
+                <path d="M 20 100 A 80 80 0 0 1 78 35" fill="none" stroke="#fed7aa" stroke-width="12" stroke-linecap="round" />
+                <!-- 綠色標準合格區 (-10¢ ~ +10¢) -->
+                <path d="M 78 35 A 80 80 0 0 1 122 35" fill="none" stroke="#86efac" stroke-width="14" stroke-linecap="round" />
+                <!-- 偏高橙色區 (+10¢ ~ +50¢) -->
+                <path d="M 122 35 A 80 80 0 0 1 180 100" fill="none" stroke="#fed7aa" stroke-width="12" stroke-linecap="round" />
+
+                <!-- 刻度中線 -->
+                <line x1="100" y1="20" x2="100" y2="30" stroke="#15803d" stroke-width="3" />
+                <line x1="50" y1="50" x2="55" y2="55" stroke="#f97316" stroke-width="1.5" />
+                <line x1="150" y1="50" x2="145" y2="55" stroke="#f97316" stroke-width="1.5" />
+              </svg>
+
+              <!-- 指針 -->
+              <div id="tuner-needle" class="absolute bottom-0 w-1.5 h-28 bg-slate-700 rounded-full shadow origin-bottom" style="transform: rotate(0deg);">
+                <div class="w-3.5 h-3.5 bg-slate-900 rounded-full -ml-1 mt-0"></div>
+              </div>
+              <div class="absolute bottom-0 w-6 h-6 rounded-full bg-slate-800 shadow"></div>
+            </div>
+
+            <div class="flex items-center justify-between w-full px-4 mt-1 text-[11px] font-bold text-slate-500">
+              <span>-50¢ 偏低</span>
+              <span class="text-emerald-700 font-black">完美綠區 (±10¢)</span>
+              <span>+50¢ 偏高</span>
+            </div>
+
+            <!-- 即時頻率與回饋提示 -->
+            <div class="mt-2 text-center">
+              <div id="freq-text" class="text-xs font-mono text-slate-400">當前頻率: -- Hz</div>
+              <div id="tuner-feedback" class="mt-1 font-bold text-xs text-slate-500 px-3 py-1 rounded-full bg-slate-100 inline-block">
+                請老師點擊【開始考試】，考生吹奏直笛即可自動評測
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 示波波形畫布 -->
+        <div class="mt-3">
+          <canvas id="waveform-canvas" class="w-full h-10 bg-slate-900/5 rounded-xl border border-slate-200/60"></canvas>
+        </div>
+      </section>
+
+      <!-- 音階指法矩陣速查 (C5 ~ D7 完整半音階) -->
+      <section class="glass-card rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">完整半音階示範速查 (C5 ~ D7 點擊試聽指法)</h3>
+          <span class="text-[11px] text-slate-400">點擊查看標準指法與範本音</span>
+        </div>
+        <div id="notes-quick-bar" class="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-9 gap-1.5 max-h-56 overflow-y-auto p-1">
+          <!-- 由 JS 自動填入完整音階 -->
+        </div>
+      </section>
+    </div>
+
+    <!-- 右欄：直笛指法圖解 (動態跟隨吹奏音) (lg:col-span-5) -->
+    <div class="lg:col-span-5 space-y-6">
+      <section class="glass-card rounded-3xl p-6 flex flex-col items-center relative">
+        <div class="w-full flex justify-between items-center mb-2">
+          <div>
+            <h2 class="text-lg font-black text-slate-800">直笛指法圖解</h2>
+            <p class="text-xs text-slate-500" id="current-fingering-label">自動跟隨吹奏音: G5 (Sol)</p>
+          </div>
+          <span id="system-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-teal-100 text-teal-800">巴洛克式 (B)</span>
+        </div>
+
+        <!-- 直笛 SVG 圖示 -->
+        <div class="w-full flex justify-center py-2">
+          <div class="relative recorder-shadow">
+            <svg id="recorder-svg" width="220" height="520" viewBox="0 0 220 520" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#fdf4dc" />
+                  <stop offset="25%" stop-color="#fffbeb" />
+                  <stop offset="60%" stop-color="#fef3c7" />
+                  <stop offset="100%" stop-color="#d97706" stop-opacity="0.25" />
+                </linearGradient>
+                <linearGradient id="mouthGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#d97706" />
+                  <stop offset="50%" stop-color="#f59e0b" />
+                  <stop offset="100%" stop-color="#b45309" />
+                </linearGradient>
+              </defs>
+
+              <!-- 吹嘴喙部 -->
+              <path d="M 85 10 L 135 10 L 130 50 L 90 50 Z" fill="url(#mouthGrad)" rx="2"/>
+              <rect x="94" y="22" width="32" height="6" rx="2" fill="#78350f" />
+              <!-- 吹口開窗 (Labium) -->
+              <rect x="95" y="44" width="30" height="12" rx="2" fill="#451a03" />
+
+              <!-- 頭部管環 -->
+              <rect x="80" y="55" width="60" height="8" rx="2" fill="#b45309" />
+
+              <!-- 管身主體 -->
+              <path d="M 82 63 L 138 63 L 130 460 L 90 460 Z" fill="url(#bodyGrad)" stroke="#b45309" stroke-width="2"/>
+
+              <!-- 飾環 -->
+              <rect x="82" y="160" width="56" height="5" fill="#f59e0b" opacity="0.6"/>
+              <rect x="86" y="360" width="48" height="5" fill="#f59e0b" opacity="0.6"/>
+
+              <!-- 底部喇叭口 (Bell) -->
+              <path d="M 90 460 L 130 460 L 142 495 L 78 495 Z" fill="url(#mouthGrad)" stroke="#78350f" stroke-width="2"/>
+              <ellipse cx="110" cy="495" rx="32" ry="10" fill="#78350f" />
+
+              <!-- 背面拇指孔 (0孔) -->
+              <g id="hole-thumb-group" transform="translate(42, 100)">
+                <circle cx="0" cy="0" r="14" fill="#f8fafc" stroke="#64748b" stroke-width="2" />
+                <circle cx="0" cy="0" r="12" fill="#cbd5e1" id="hole-0" />
+                <text x="-2" y="4" font-size="10" font-weight="bold" fill="#334155" text-anchor="end">左拇(0)</text>
+                <line x1="16" y1="0" x2="60" y2="0" stroke="#94a3b8" stroke-dasharray="3,2" stroke-width="1.5" />
+              </g>
+
+              <!-- 前方音孔 1 (左食) -->
+              <g transform="translate(110, 115)">
+                <circle cx="0" cy="0" r="11" fill="#f8fafc" stroke="#475569" stroke-width="2" />
+                <circle cx="0" cy="0" r="9.5" fill="#cbd5e1" id="hole-1" />
+                <text x="24" y="4" font-size="11" font-weight="bold" fill="#64748b">1 (左食)</text>
+              </g>
+
+              <!-- 前方音孔 2 (左中) -->
+              <g transform="translate(110, 155)">
+                <circle cx="0" cy="0" r="11" fill="#f8fafc" stroke="#475569" stroke-width="2" />
+                <circle cx="0" cy="0" r="9.5" fill="#cbd5e1" id="hole-2" />
+                <text x="24" y="4" font-size="11" font-weight="bold" fill="#64748b">2 (左中)</text>
+              </g>
+
+              <!-- 前方音孔 3 (左無) -->
+              <g transform="translate(110, 195)">
+                <circle cx="0" cy="0" r="11" fill="#f8fafc" stroke="#475569" stroke-width="2" />
+                <circle cx="0" cy="0" r="9.5" fill="#cbd5e1" id="hole-3" />
+                <text x="24" y="4" font-size="11" font-weight="bold" fill="#64748b">3 (左無)</text>
+              </g>
+
+              <text x="110" y="235" font-size="9" fill="#94a3b8" font-weight="bold" text-anchor="middle">—— 左手 ↑ / 右手 ↓ ——</text>
+
+              <!-- 前方音孔 4 (右食) -->
+              <g transform="translate(110, 265)">
+                <circle cx="0" cy="0" r="11" fill="#f8fafc" stroke="#475569" stroke-width="2" />
+                <circle cx="0" cy="0" r="9.5" fill="#cbd5e1" id="hole-4" />
+                <text x="24" y="4" font-size="11" font-weight="bold" fill="#64748b">4 (右食)</text>
+              </g>
+
+              <!-- 前方音孔 5 (右中) -->
+              <g transform="translate(110, 305)">
+                <circle cx="0" cy="0" r="11" fill="#f8fafc" stroke="#475569" stroke-width="2" />
+                <circle cx="0" cy="0" r="9.5" fill="#cbd5e1" id="hole-5" />
+                <text x="24" y="4" font-size="11" font-weight="bold" fill="#64748b">5 (右中)</text>
+              </g>
+
+              <!-- 前方音孔 6 (右無雙孔) -->
+              <g transform="translate(110, 350)">
+                <circle cx="-5" cy="0" r="7" fill="#f8fafc" stroke="#475569" stroke-width="1.8" />
+                <circle cx="-5" cy="0" r="5.5" fill="#cbd5e1" id="hole-6a" />
+                <circle cx="7" cy="0" r="7" fill="#f8fafc" stroke="#475569" stroke-width="1.8" />
+                <circle cx="7" cy="0" r="5.5" fill="#cbd5e1" id="hole-6b" />
+                <text x="24" y="4" font-size="11" font-weight="bold" fill="#64748b">6 (右無雙孔)</text>
+              </g>
+
+              <!-- 前方音孔 7 (右小雙孔) -->
+              <g transform="translate(110, 400)">
+                <circle cx="-5" cy="0" r="7" fill="#f8fafc" stroke="#475569" stroke-width="1.8" />
+                <circle cx="-5" cy="0" r="5.5" fill="#cbd5e1" id="hole-7a" />
+                <circle cx="7" cy="0" r="7" fill="#f8fafc" stroke="#475569" stroke-width="1.8" />
+                <circle cx="7" cy="0" r="5.5" fill="#cbd5e1" id="hole-7b" />
+                <text x="24" y="4" font-size="11" font-weight="bold" fill="#64748b">7 (右小雙孔)</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 指法狀態摘要說明 -->
+        <div class="w-full bg-slate-50 p-3 rounded-2xl border border-slate-200 mt-2 text-xs text-slate-600">
+          <div class="font-bold text-slate-700 mb-1 flex items-center gap-2">
+            <span>圖例：</span>
+            <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-slate-800 inline-block"></span> 閉孔</span>
+            <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-white border border-slate-400 inline-block"></span> 開孔</span>
+            <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> 拇指半孔</span>
+          </div>
+          <div id="fingering-text-summary" class="text-slate-500 leading-relaxed font-mono text-[11px]">
+            0:● 1:● 2:● 3:● 4:○ 5:○ 6大:○ 6小:○ 7大:○ 7小:○
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- 考試成績診斷單彈窗 (支援列印) -->
+  <div id="result-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+    <div id="printable-report" class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative max-h-[94vh] overflow-y-auto">
+      
+      <!-- 頂部標題與學生資訊 -->
+      <div class="text-center pb-4 border-b border-slate-200">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 text-3xl mb-2 no-print">
+          <i class="fa-solid fa-award"></i>
+        </div>
+        <h2 class="text-2xl font-black text-slate-800">高音直笛音準考試評測成績單</h2>
+        <div class="flex flex-wrap justify-between items-center text-xs text-slate-500 mt-3 px-2 gap-2">
+          <span>班級座號：<strong id="report-student-id" class="text-slate-800 text-sm font-mono">--</strong></span>
+          <span>應試學生：<strong id="report-student-name" class="text-slate-800 text-sm">--</strong></span>
+          <span>測驗時間：<span id="report-timestamp">--</span></span>
+        </div>
+      </div>
+
+      <!-- 分數與等第卡片 (高肯定分數展示) -->
+      <div class="my-5 p-5 rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-slate-50 border border-teal-200/80 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold text-teal-700 uppercase tracking-wider">評定總分</div>
+          <div class="flex items-baseline gap-2 mt-1">
+            <span id="report-final-score" class="text-5xl font-black text-teal-800">--</span>
+            <span class="text-lg font-bold text-slate-500">分</span>
+          </div>
+          <span id="report-grade-badge" class="mt-2 inline-block px-3 py-1 rounded-full text-xs font-black bg-teal-600 text-white shadow-sm">
+            良好 (Good)
+          </span>
+        </div>
+
+        <div class="text-right">
+          <div class="text-xs font-bold text-slate-500">綠色標準音準持穩率 (±10¢)</div>
+          <div id="report-green-ratio" class="text-3xl font-black text-emerald-600 mt-0.5">-- %</div>
+          <div class="text-xs text-slate-600 font-bold mt-1">評核模式: <span class="text-teal-700">自由吹奏動態辨識</span></div>
+        </div>
+      </div>
+
+      <!-- 詳細音準指標分析 -->
+      <div class="space-y-3 mb-5">
+        <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider">音準採樣詳細數據</h3>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="text-slate-500 text-[10px]">有效吹奏時間</div>
+            <div id="report-voiced-time" class="text-sm font-black text-slate-800 mt-0.5">-- 秒</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+            <div class="text-emerald-700 text-[10px]">綠色準確時長 (±10¢)</div>
+            <div id="report-in-tune-time" class="text-sm font-black text-emerald-800 mt-0.5">-- 秒</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
+            <div class="text-amber-700 text-[10px]">音高偏高時長</div>
+            <div id="report-sharp-time" class="text-sm font-black text-amber-800 mt-0.5">-- 秒</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-sky-50 border border-sky-200">
+            <div class="text-sky-700 text-[10px]">音高偏低時長</div>
+            <div id="report-flat-time" class="text-sm font-black text-sky-800 mt-0.5">-- 秒</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 專業教學診斷與評語 -->
+      <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 mb-6">
+        <div class="flex items-center gap-2 text-amber-800 font-bold text-xs mb-1">
+          <i class="fa-solid fa-chalkboard-user"></i>
+          <span>教師評語與吹奏學習回饋：</span>
+        </div>
+        <p id="report-feedback-text" class="text-xs text-amber-950 leading-relaxed font-medium">
+          --
+        </p>
+      </div>
+
+      <!-- 底部操作按鈕 (列印時隱藏) -->
+      <div class="flex flex-wrap items-center gap-2 no-print">
+        <button id="btn-print-report" class="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95">
+          <i class="fa-solid fa-print"></i>
+          <span>列印成績單</span>
+        </button>
+        <button id="btn-copy-result" class="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95">
+          <i class="fa-solid fa-copy"></i>
+          <span id="btn-copy-text">複製文字成績</span>
+        </button>
+        <button id="btn-modal-close" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md shadow-emerald-600/25 transition active:scale-95">
+          確認 / 下一位考生
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*
+     * 高音直笛完整半音階資料庫 (C5 ~ D7)
+     * 指法陣列: [0孔, 1孔, 2孔, 3孔, 4孔, 5孔, 6a大, 6b小, 7a大, 7b小]
+     * 1 = 閉孔, 0 = 開孔, 0.5 = 拇指半孔
+     */
+    const NOTES_DATA = [
+      {
+        id: "C5", name: "C5", solfege: "Do (低音ㄉㄛ)", freq: 523.25, accidental: false,
+        fingeringB: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], fingeringG: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        tip: "全部手指完全閉孔，氣流需柔和溫暖，放鬆口型。"
+      },
+      {
+        id: "C#5", name: "C#5 / Db5", solfege: "Di (升Do)", freq: 554.37, accidental: true,
+        fingeringB: [1, 1, 1, 1, 1, 1, 1, 1, 1, 0], fingeringG: [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        tip: "右小指第 7 孔只按大孔（放開小孔）。"
+      },
+      {
+        id: "D5", name: "D5", solfege: "Re (低音ㄖㄨㄝ)", freq: 587.33, accidental: false,
+        fingeringB: [1, 1, 1, 1, 1, 1, 1, 1, 0, 0], fingeringG: [1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+        tip: "放開第 7 雙孔，其餘孔密閉。"
+      },
+      {
+        id: "D#5", name: "D#5 / Eb5", solfege: "Ri (升Re)", freq: 622.25, accidental: true,
+        fingeringB: [1, 1, 1, 1, 1, 1, 1, 0, 0, 0], fingeringG: [1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+        tip: "第 6 孔按大孔，第 7 孔全開。"
+      },
+      {
+        id: "E5", name: "E5", solfege: "Mi (ㄇㄧ)", freq: 659.25, accidental: false,
+        fingeringB: [1, 1, 1, 1, 1, 1, 0, 0, 0, 0], fingeringG: [1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+        tip: "放開第 6、7 雙孔，氣流均勻平穩。"
+      },
+      {
+        id: "F5", name: "F5", solfege: "Fa (ㄈㄚ)", freq: 698.46, accidental: false,
+        fingeringB: [1, 1, 1, 1, 1, 0, 1, 1, 1, 1], fingeringG: [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+        tip: "巴洛克式需叉狀指法（按 1,2,3,4,6,7 孔，開 5 孔）。"
+      },
+      {
+        id: "F#5", name: "F#5 / Gb5", solfege: "Fi (升Fa)", freq: 739.99, accidental: true,
+        fingeringB: [1, 1, 1, 1, 0, 1, 1, 1, 0, 0], fingeringG: [1, 1, 1, 1, 0, 1, 1, 1, 0, 0],
+        tip: "按 1,2,3,5,6 孔，放開第 4 孔。"
+      },
+      {
+        id: "G5", name: "G5", solfege: "Sol (ㄙㄛ)", freq: 783.99, accidental: false,
+        fingeringB: [1, 1, 1, 1, 0, 0, 0, 0, 0, 0], fingeringG: [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+        tip: "左手按 0,1,2,3 孔，右手全放開，最穩定的基礎長音！"
+      },
+      {
+        id: "G#5", name: "G#5 / Ab5", solfege: "Si (升Sol)", freq: 830.61, accidental: true,
+        fingeringB: [1, 1, 1, 0, 1, 1, 1, 0, 0, 0], fingeringG: [1, 1, 1, 0, 1, 1, 0, 0, 0, 0],
+        tip: "左手中指放開第 3 孔，右手配合微調。"
+      },
+      {
+        id: "A5", name: "A5", solfege: "La (ㄌㄚ)", freq: 880.00, accidental: false,
+        fingeringB: [1, 1, 1, 0, 0, 0, 0, 0, 0, 0], fingeringG: [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "左手拇、食、中指按 0,1,2 孔。"
+      },
+      {
+        id: "A#5", name: "A#5 / Bb5", solfege: "Li (降Si)", freq: 932.33, accidental: true,
+        fingeringB: [1, 1, 0, 1, 1, 0, 0, 0, 0, 0], fingeringG: [1, 1, 0, 1, 1, 1, 1, 1, 0, 0],
+        tip: "巴洛克指法為按 0, 1, 3, 4 孔。"
+      },
+      {
+        id: "B5", name: "B5", solfege: "Si (ㄒㄧ)", freq: 987.77, accidental: false,
+        fingeringB: [1, 1, 0, 0, 0, 0, 0, 0, 0, 0], fingeringG: [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        tip: "左手僅按 0、1 孔，氣流柔和專注。"
+      },
+      {
+        id: "C6", name: "C6", solfege: "Do (高音ㄉㄛ)", freq: 1046.50, accidental: false,
+        fingeringB: [1, 0, 1, 0, 0, 0, 0, 0, 0, 0], fingeringG: [1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "按 0、2 孔（放開第 1 孔）。"
+      },
+      {
+        id: "C#6", name: "C#6 / Db6", solfege: "Di (高音升Do)", freq: 1108.73, accidental: true,
+        fingeringB: [0, 1, 1, 0, 0, 0, 0, 0, 0, 0], fingeringG: [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "拇指孔放開！僅按左手第 1、2 孔。"
+      },
+      {
+        id: "D6", name: "D6", solfege: "Re (高音ㄖㄨㄝ)", freq: 1174.66, accidental: false,
+        fingeringB: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0], fingeringG: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "拇指放開！僅按左手中指第 2 孔。"
+      },
+      {
+        id: "D#6", name: "D#6 / Eb6", solfege: "Ri (高音升Re)", freq: 1244.51, accidental: true,
+        fingeringB: [0, 0, 1, 1, 1, 1, 1, 1, 0, 0], fingeringG: [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+        tip: "拇指開，開 1 孔，按 2,3,4,5,6 孔。"
+      },
+      {
+        id: "E6", name: "E6", solfege: "Mi (高音ㄇㄧ)", freq: 1318.51, accidental: false,
+        fingeringB: [0.5, 1, 1, 1, 1, 1, 0, 0, 0, 0], fingeringG: [0.5, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+        tip: "拇指孔開一半泛音孔（指甲微切），氣流快速集中。"
+      },
+      {
+        id: "F6", name: "F6", solfege: "Fa (高音ㄈㄚ)", freq: 1396.91, accidental: false,
+        fingeringB: [0.5, 1, 1, 1, 1, 0, 1, 1, 0, 0], fingeringG: [0.5, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+        tip: "拇指半孔，巴洛克式按 1,2,3,4,6 孔。"
+      },
+      {
+        id: "F#6", name: "F#6 / Gb6", solfege: "Fi (高音升Fa)", freq: 1479.98, accidental: true,
+        fingeringB: [0.5, 1, 1, 1, 0, 1, 0, 0, 0, 0], fingeringG: [0.5, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+        tip: "拇指半孔，按 1,2,3,5 孔。"
+      },
+      {
+        id: "G6", name: "G6", solfege: "Sol (高音ㄙㄛ)", freq: 1567.98, accidental: false,
+        fingeringB: [0.5, 1, 1, 1, 0, 0, 0, 0, 0, 0], fingeringG: [0.5, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+        tip: "拇指半孔，按 1,2,3 孔，右手全開，氣速集中。"
+      },
+      {
+        id: "A6", name: "A6", solfege: "La (高音ㄌㄚ)", freq: 1760.00, accidental: false,
+        fingeringB: [0.5, 1, 1, 0, 0, 0, 0, 0, 0, 0], fingeringG: [0.5, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        tip: "拇指半孔，按 1, 2 孔。"
+      },
+      {
+        id: "B6", name: "B6", solfege: "Si (高音ㄒㄧ)", freq: 1975.53, accidental: false,
+        fingeringB: [0.5, 1, 0, 1, 1, 0, 1, 1, 0, 0], fingeringG: [0.5, 1, 0, 1, 1, 0, 1, 1, 0, 0],
+        tip: "拇指半孔，按 1, 3, 4, 6 孔。"
+      },
+      {
+        id: "C7", name: "C7", solfege: "Do (倍高音ㄉㄛ)", freq: 2093.00, accidental: false,
+        fingeringB: [0.5, 1, 0, 1, 1, 1, 0, 0, 1, 1], fingeringG: [0.5, 1, 0, 1, 1, 1, 0, 0, 1, 1],
+        tip: "高音域泛音音符，需強而穩的腹部丹田氣息支持。"
+      },
+      {
+        id: "D7", name: "D7", solfege: "Re (倍高音ㄖㄨㄝ)", freq: 2349.32, accidental: false,
+        fingeringB: [0.5, 0, 1, 1, 0, 1, 1, 1, 0, 0], fingeringG: [0.5, 0, 1, 1, 0, 1, 1, 1, 0, 0],
+        tip: "直笛最高音域挑戰，開第 1 孔，按 2, 3, 5, 6 孔。"
+      }
+    ];
+
+    // 全域變數
+    let audioCtx = null;
+    let micStream = null;
+    let analyserNode = null;
+    let isListening = false;
+    let currentSystem = 'B';
+    let currentActiveNote = NOTES_DATA[7]; // 預設 G5
+
+    // 教師主控考試狀態與計時
+    let isExamRunning = false;
+    let examStartTimestamp = 0;
+    let totalVoicedMs = 0;       // 有效吹奏發聲時間 (排除環境靜音)
+    let greenInTuneMs = 0;       // 音準在綠色標準範圍 (±10¢以內)
+    let sharpMs = 0;             // 音偏高時間 (> +10¢)
+    let flatMs = 0;              // 音偏低時間 (< -10¢)
+    let lastFrameTime = performance.now();
+
+    // DOM 元素快取
+    const micToggleBtn = document.getElementById('mic-toggle-btn');
+    const micBtnText = document.getElementById('mic-btn-text');
+    const micIcon = document.getElementById('mic-icon');
+    const btnBaroque = document.getElementById('btn-baroque');
+    const btnGerman = document.getElementById('btn-german');
+    const systemBadge = document.getElementById('system-badge');
+    
+    const studentIdInput = document.getElementById('student-id');
+    const studentNameInput = document.getElementById('student-name');
+    const examIndicatorDot = document.getElementById('exam-indicator-dot');
+    const examStatusLabel = document.getElementById('exam-status-label');
+
+    const btnStartExam = document.getElementById('btn-start-exam');
+    const btnFinishExam = document.getElementById('btn-finish-exam');
+    const btnResetExam = document.getElementById('btn-reset-exam');
+    const timingDisplay = document.getElementById('timing-display');
+    const liveGreenRatio = document.getElementById('live-green-ratio');
+    const greenProgressBar = document.getElementById('green-progress-bar');
+
+    const noteBadge = document.getElementById('note-badge');
+    const detectedNoteName = document.getElementById('detected-note-name');
+    const detectedSolfege = document.getElementById('detected-solfege');
+    const centsText = document.getElementById('cents-text');
+    const freqText = document.getElementById('freq-text');
+    const volumeMeterBar = document.getElementById('volume-meter-bar');
+    const tunerNeedle = document.getElementById('tuner-needle');
+    const tunerFeedback = document.getElementById('tuner-feedback');
+    const waveformCanvas = document.getElementById('waveform-canvas');
+    const canvasCtx = waveformCanvas.getContext('2d');
+    const notesQuickBar = document.getElementById('notes-quick-bar');
+    const currentFingeringLabel = document.getElementById('current-fingering-label');
+    const fingeringTextSummary = document.getElementById('fingering-text-summary');
+
+    // 診斷單 Modal DOM
+    const resultModal = document.getElementById('result-modal');
+    const reportStudentId = document.getElementById('report-student-id');
+    const reportStudentName = document.getElementById('report-student-name');
+    const reportTimestamp = document.getElementById('report-timestamp');
+    const reportFinalScore = document.getElementById('report-final-score');
+    const reportGradeBadge = document.getElementById('report-grade-badge');
+    const reportGreenRatio = document.getElementById('report-green-ratio');
+    const reportVoicedTime = document.getElementById('report-voiced-time');
+    const reportInTuneTime = document.getElementById('report-in-tune-time');
+    const reportSharpTime = document.getElementById('report-sharp-time');
+    const reportFlatTime = document.getElementById('report-flat-time');
+    const reportFeedbackText = document.getElementById('report-feedback-text');
+    const btnPrintReport = document.getElementById('btn-print-report');
+    const btnCopyResult = document.getElementById('btn-copy-result');
+    const btnCopyText = document.getElementById('btn-copy-text');
+    const btnModalClose = document.getElementById('btn-modal-close');
+
+    /*
+     * Autocorrelation 基頻偵測演算法
+     */
+    function autoCorrelate(buffer, sampleRate) {
+      const SIZE = buffer.length;
+      let sumSquares = 0;
+      for (let i = 0; i < SIZE; i++) {
+        const val = buffer[i];
+        sumSquares += val * val;
+      }
+      const rms = Math.sqrt(sumSquares / SIZE);
+      // 過濾環境雜音閥值
+      if (rms < 0.018) {
+        return { freq: -1, rms: rms };
+      }
+
+      let r1 = 0, r2 = SIZE - 1;
+      const thres = 0.2;
+      for (let i = 0; i < SIZE / 2; i++) {
+        if (Math.abs(buffer[i]) < thres) { r1 = i; break; }
+      }
+      for (let i = 1; i < SIZE / 2; i++) {
+        if (Math.abs(buffer[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+      }
+      const trimmed = buffer.slice(r1, r2);
+      const c = new Float32Array(trimmed.length).fill(0);
+
+      for (let i = 0; i < trimmed.length; i++) {
+        for (let j = 0; j < trimmed.length - i; j++) {
+          c[i] = c[i] + trimmed[j] * trimmed[j + i];
+        }
+      }
+
+      let d = 0;
+      while (c[d] > c[d + 1]) {
+        d++;
+        if (d >= c.length - 1) return { freq: -1, rms: rms };
+      }
+
+      let maxval = -1, maxpos = -1;
+      for (let i = d; i < c.length; i++) {
+        if (c[i] > maxval) {
+          maxval = c[i];
+          maxpos = i;
+        }
+      }
+      if (maxpos === -1 || maxval === 0) return { freq: -1, rms: rms };
+
+      let T0 = maxpos;
+      if (maxpos > 0 && maxpos < c.length - 1) {
+        const alpha = c[maxpos - 1];
+        const beta = c[maxpos];
+        const gamma = c[maxpos + 1];
+        const delta = (alpha - gamma) / (2 * (alpha - 2 * beta + gamma));
+        if (!isNaN(delta)) T0 = maxpos + delta;
+      }
+
+      return { freq: sampleRate / T0, rms: rms };
+    }
+
+    function frequencyToPitchDetails(freq) {
+      if (freq <= 0) return null;
+      const noteNum = 12 * (Math.log(freq / 440) / Math.log(2));
+      const roundedNote = Math.round(noteNum);
+      const cents = Math.round((noteNum - roundedNote) * 100);
+
+      let closestNote = null;
+      let minDiff = Infinity;
+      for (const note of NOTES_DATA) {
+        const diff = Math.abs(note.freq - freq);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestNote = note;
+        }
+      }
+
+      const inRecorderRange = freq >= 480 && freq <= 2500;
+      return {
+        freq: Math.round(freq * 10) / 10,
+        cents: cents,
+        closestNote: closestNote,
+        inRecorderRange: inRecorderRange
+      };
+    }
+
+    /*
+     * 國小肯定計分模型
+     * P: 綠色標準範圍 (±10¢以內) 佔總有效吹奏時間百分比
+     * 1. 基礎得分由 70 分起跳，避免挫折與自卑感。
+     * 2. P < 35%：70 ~ 79 分 (70 + (P / 35) * 9)。
+     * 3. 35% <= P < 65%：80 ~ 85 分主力核心區間 (80 + ((P - 35) / 30) * 5)。
+     * 4. 65% <= P < 80%：86 ~ 89 分 (86 + ((P - 65) / 15) * 3)。
+     * 5. P >= 80%：90 ~ 100 分 (90 + ((P - 80) / 20) * 10 依比例遞增至滿分)。
+     */
+    function computeExamScore(P) {
+      if (P <= 0 || isNaN(P)) return 70;
+      if (P < 35) {
+        return Math.max(70, Math.min(79, Math.round(70 + (P / 35) * 9)));
+      } else if (P >= 35 && P < 65) {
+        return Math.min(85, Math.round(80 + ((P - 35) / 30) * 5));
+      } else if (P >= 65 && P < 80) {
+        return Math.min(89, Math.round(86 + ((P - 65) / 15) * 3));
+      } else {
+        return Math.min(100, Math.round(90 + ((P - 80) / 20) * 10));
+      }
+    }
+
+    function getGradeBadge(score) {
+      if (score >= 90) return { text: '卓越 (Outstanding)', color: 'bg-emerald-600' };
+      if (score >= 86) return { text: '優良 (Very Good)', color: 'bg-teal-600' };
+      if (score >= 80) return { text: '良好 (Good)', color: 'bg-cyan-600' };
+      return { text: '合格 (Pass)', color: 'bg-teal-700' };
+    }
+
+    function generateFeedbackComment(score, greenRatio, sharpTime, flatTime, voicedSec) {
+      if (voicedSec < 1.0) {
+        return `⚠️ 有效吹奏採樣時長過短（僅 ${voicedSec.toFixed(1)} 秒），建議請老師點擊【重新測驗】，請同學吹奏完整長音或自選樂句至少 3 秒以上以獲得最精準分析。`;
+      }
+      if (greenRatio >= 80) {
+        return `🌟 恭喜榮獲 ${score} 分卓越最高榮譽！音色極度圓潤純淨，氣流與嘴唇包覆非常平穩，綠色完美音準持穩率高達 ${greenRatio.toFixed(1)}%，音準控制能力相當優秀！`;
+      } else if (greenRatio >= 65) {
+        return `👏 表現非常優良（${score} 分）！長音穩定度高，已具備極佳的音樂表現力。偶爾微幅偏差多加練習即可更加完美！`;
+      } else if (greenRatio >= 35) {
+        if (sharpTime > flatTime * 1.4) {
+          return `🎉 獲得 ${score} 分良好評價！吹奏整體很棒，音高有時稍微偏高（Sharp），建議吹奏時口腔稍微放鬆保持含水般的圓形（如吹出溫暖的微風），避免太過用力咬吹口。`;
+        } else if (flatTime > sharpTime * 1.4) {
+          return `🎉 獲得 ${score} 分良好評價！吹奏平穩，音高有時稍微偏低（Flat），請檢查各手指音孔是否有完全按緊閉合（避免微小漏氣），氣息稍加提振集中。`;
+        } else {
+          return `🎉 獲得 ${score} 分良好評價！音階吹奏順暢，穩定度良好，只要再多練習幾次長音，音色會更明亮好聽！`;
+        }
+      } else {
+        return `順利完成測驗獲得 ${score} 分！已有良好的吹奏學習基礎，吹直笛需要時間建立手指與嘴型習慣：① 請放慢速度確認手指指腹是否完全按滿音孔；② 吐氣要像吹肥皂泡泡一樣輕柔均勻；③ 參考右側指法圖多吹長音，音準一定會更加進步！`;
+      }
+    }
+
+    function getGradeBadge(score) {
+      if (score >= 90) return { text: '卓越 (Outstanding)', color: 'bg-emerald-600' };
+      if (score >= 86) return { text: '優良 (Very Good)', color: 'bg-teal-600' };
+      if (score >= 80) return { text: '良好 (Good)', color: 'bg-cyan-600' };
+      if (score >= 70) return { text: '尚可 (Pass)', color: 'bg-amber-600' };
+      return { text: '加油 (Keep Trying)', color: 'bg-indigo-600' };
+    }
+
+    function generateFeedbackComment(score, greenRatio, sharpTime, flatTime, voicedSec) {
+      if (voicedSec < 1.0) {
+        return `⚠️ 有效吹奏採樣時長過短（僅 ${voicedSec.toFixed(1)} 秒），建議請老師點擊【重新測驗】，請同學吹奏完整長音或自選樂句至少 3 秒以上以獲得最精準分析。`;
+      }
+      if (greenRatio >= 85) {
+        return `🌟 恭喜榮獲 ${score} 分卓越最高榮譽！音色極度圓潤純淨，氣流與嘴唇包覆非常平穩，綠色完美音準持穩率高達 ${greenRatio.toFixed(1)}%，音準控制能力相當優秀！`;
+      } else if (greenRatio >= 70) {
+        return `👏 表現非常優良（${score} 分）！長音穩定度高，已具備極佳的音樂表現力。偶爾微幅偏差多加練習即可更加完美！`;
+      } else if (greenRatio >= 50) {
+        if (sharpTime > flatTime * 1.4) {
+          return `🎉 獲得 ${score} 分良好評價！吹奏整體很棒，音高有時稍微偏高（Sharp），建議吹奏時口腔稍微放鬆保持含水般的圓形（如吹出溫暖的微風），避免太過用力咬吹口。`;
+        } else if (flatTime > sharpTime * 1.4) {
+          return `🎉 獲得 ${score} 分良好評價！吹奏平穩，音高有時稍微偏低（Flat），請檢查各手指音孔是否有完全按緊閉合（避免微小漏氣），氣息稍加提振集中。`;
+        } else {
+          return `🎉 獲得 ${score} 分良好評價！音階吹奏順暢，穩定度良好，只要再多練習幾次長音，音色會更明亮好聽！`;
+        }
+      } else if (greenRatio >= 30) {
+        return `順利通過及格標準獲得 ${score} 分！已有基礎的吹奏控制力，建議每次練習吹奏前先做深呼吸，一口氣平穩吹出 4 秒長音，練習讓指針穩穩停留在正中央綠色區域。`;
+      } else {
+        return `獲得 ${score} 分基礎鼓勵成績！請同學不要氣餒，吹直笛需要時間建立手指與嘴型習慣：① 請放慢速度確認手指指腹是否完全按滿音孔；② 吐氣要像吹肥皂泡泡一樣輕柔均勻；③ 參考右側指法圖多吹長音，一定會突飛猛進！`;
+      }
+    }
+
+    /*
+     * 教師控制考評流程
+     */
+    async function handleStartExam() {
+      if (!isListening) {
+        await startMicrophone();
+      }
+      isExamRunning = true;
+      examStartTimestamp = performance.now();
+      totalVoicedMs = 0;
+      greenInTuneMs = 0;
+      sharpMs = 0;
+      flatMs = 0;
+
+      // 更新按鈕與指示燈狀態
+      examIndicatorDot.className = 'w-3 h-3 rounded-full bg-rose-500 recording-dot-anim';
+      examStatusLabel.textContent = '● 考評採樣中 (考生吹奏中)';
+      examStatusLabel.className = 'text-xs font-black uppercase tracking-wider text-rose-600';
+
+      btnStartExam.disabled = true;
+      btnStartExam.className = 'py-3 px-4 rounded-2xl bg-slate-200 text-slate-400 font-black text-sm flex items-center justify-center gap-2 cursor-not-allowed';
+
+      btnFinishExam.disabled = false;
+      btnFinishExam.className = 'py-3 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-black text-sm shadow-md shadow-rose-600/30 flex items-center justify-center gap-2 active:scale-95 transition';
+
+      tunerFeedback.innerHTML = `<span class="text-teal-700 font-bold">🎙️ 正在動態記錄考生的吹奏音準，吹奏結束請老師點擊【結束考試並結算評分】</span>`;
+    }
+
+    function handleFinishExam() {
+      if (!isExamRunning) return;
+      isExamRunning = false;
+
+      examIndicatorDot.className = 'w-3 h-3 rounded-full bg-slate-300';
+      examStatusLabel.textContent = '評測已結束 (已結算)';
+      examStatusLabel.className = 'text-xs font-black uppercase tracking-wider text-slate-600';
+
+      btnStartExam.disabled = false;
+      btnStartExam.className = 'py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-md shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition';
+
+      btnFinishExam.disabled = true;
+      btnFinishExam.className = 'py-3 px-4 rounded-2xl bg-slate-200 text-slate-400 font-black text-sm flex items-center justify-center gap-2 cursor-not-allowed';
+
+      openDiagnosticModal();
+    }
+
+    function handleResetExam() {
+      isExamRunning = false;
+      totalVoicedMs = 0;
+      greenInTuneMs = 0;
+      sharpMs = 0;
+      flatMs = 0;
+
+      examIndicatorDot.className = 'w-3 h-3 rounded-full bg-slate-300';
+      examStatusLabel.textContent = '待命（已重置）';
+      examStatusLabel.className = 'text-xs font-black uppercase tracking-wider text-slate-600';
+
+      btnStartExam.disabled = false;
+      btnStartExam.className = 'py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-md shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition';
+
+      btnFinishExam.disabled = true;
+      btnFinishExam.className = 'py-3 px-4 rounded-2xl bg-slate-200 text-slate-400 font-black text-sm flex items-center justify-center gap-2 cursor-not-allowed';
+
+      timingDisplay.textContent = '0.0 秒 (有效吹奏: 0.0 秒)';
+      liveGreenRatio.textContent = '0.0 %';
+      greenProgressBar.style.width = '0%';
+      tunerFeedback.textContent = '考試已重置，請老師點擊【開始考試】';
+    }
+
+    function openDiagnosticModal() {
+      const voicedSec = totalVoicedMs / 1000;
+      // 綠色精準持穩率 (P%)：綠色時間 / 有效吹奏時間
+      const greenRatio = totalVoicedMs > 0 ? (greenInTuneMs / totalVoicedMs) * 100 : 0;
+      const score = computeExamScore(greenRatio);
+      const grade = getGradeBadge(score);
+
+      const sId = studentIdInput.value.trim() || '未填寫號碼';
+      const sName = studentNameInput.value.trim() || '考生同學';
+
+      reportStudentId.textContent = sId;
+      reportStudentName.textContent = sName;
+      reportTimestamp.textContent = new Date().toLocaleString('zh-TW', { hour12: false });
+      reportFinalScore.textContent = score;
+      reportGradeBadge.textContent = grade.text;
+      reportGradeBadge.className = `mt-2 inline-block px-3 py-1 rounded-full text-xs font-black text-white shadow-sm ${grade.color}`;
+      reportGreenRatio.textContent = `${greenRatio.toFixed(1)} %`;
+
+      reportVoicedTime.textContent = `${voicedSec.toFixed(1)} 秒`;
+      reportInTuneTime.textContent = `${(greenInTuneMs / 1000).toFixed(1)} 秒`;
+      reportSharpTime.textContent = `${(sharpMs / 1000).toFixed(1)} 秒`;
+      reportFlatTime.textContent = `${(flatMs / 1000).toFixed(1)} 秒`;
+
+      reportFeedbackText.textContent = generateFeedbackComment(score, greenRatio, sharpMs, flatMs, voicedSec);
+
+      resultModal.classList.remove('hidden');
+    }
+
+    /*
+     * 直笛指法孔位視覺渲染 (10孔模型)
+     */
+    function renderRecorderFingering(note) {
+      if (!note) return;
+      const fingerings = currentSystem === 'B' ? note.fingeringB : note.fingeringG;
+
+      currentFingeringLabel.textContent = `當前音: ${note.name} (${note.solfege}) - ${note.tip}`;
+      systemBadge.textContent = currentSystem === 'B' ? '巴洛克式 (B)' : '德式 (G)';
+
+      // 0孔 (拇指)
+      const h0 = document.getElementById('hole-0');
+      if (fingerings[0] === 1) h0.setAttribute('fill', '#1e293b');
+      else if (fingerings[0] === 0.5) h0.setAttribute('fill', '#f59e0b');
+      else h0.setAttribute('fill', '#f8fafc');
+
+      // 1 ~ 5孔
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`hole-${i}`).setAttribute('fill', fingerings[i] === 1 ? '#1e293b' : '#f8fafc');
+      }
+
+      // 6孔雙孔
+      document.getElementById('hole-6a').setAttribute('fill', fingerings[6] === 1 ? '#1e293b' : '#f8fafc');
+      document.getElementById('hole-6b').setAttribute('fill', fingerings[7] === 1 ? '#1e293b' : '#f8fafc');
+
+      // 7孔雙孔
+      document.getElementById('hole-7a').setAttribute('fill', fingerings[8] === 1 ? '#1e293b' : '#f8fafc');
+      document.getElementById('hole-7b').setAttribute('fill', fingerings[9] === 1 ? '#1e293b' : '#f8fafc');
+
+      // 摘要說明
+      const names = ['0', '1', '2', '3', '4', '5', '6大', '6小', '7大', '7小'];
+      const desc = fingerings.map((s, idx) => {
+        let sym = '○';
+        if (s === 1) sym = '●';
+        else if (s === 0.5) sym = '◐';
+        return `${names[idx]}:${sym}`;
+      }).join(' ');
+      fingeringTextSummary.textContent = desc;
+    }
+
+    function setActiveNote(note) {
+      currentActiveNote = note;
+      renderRecorderFingering(note);
+      populateNotesGrid();
+    }
+
+    function populateNotesGrid() {
+      notesQuickBar.innerHTML = '';
+      NOTES_DATA.forEach((note) => {
+        const btn = document.createElement('button');
+        const isActive = note.id === currentActiveNote.id;
+        let colorClasses = '';
+
+        if (isActive) {
+          colorClasses = 'bg-teal-600 text-white border-teal-700 shadow-md ring-2 ring-teal-400 font-black scale-[1.03] z-10';
+        } else if (note.accidental) {
+          colorClasses = 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 font-bold';
+        } else {
+          colorClasses = 'bg-white hover:bg-teal-50 text-slate-800 border-slate-200 font-bold';
+        }
+
+        btn.className = `p-1.5 rounded-xl text-center border transition flex flex-col items-center justify-center text-xs ${colorClasses}`;
+        btn.innerHTML = `
+          <span class="text-xs">${note.name.split('/')[0].trim()}</span>
+          <span class="text-[9px] opacity-75 truncate max-w-full">${note.solfege.split(' ')[0]}</span>
+        `;
+        btn.addEventListener('click', () => {
+          setActiveNote(note);
+          playReferenceTone(note.freq, 0.4);
+        });
+        notesQuickBar.appendChild(btn);
+      });
+    }
+
+    /*
+     * 示範音合成
+     */
+    function playReferenceTone(frequency, duration = 0.8) {
+      try {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtxClass();
+        const now = ctx.currentTime;
+
+        const osc1 = ctx.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(frequency, now);
+
+        const osc2 = ctx.createOscillator();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(frequency * 2, now);
+
+        const gainNode = ctx.createGain();
+        const overtoneGain = ctx.createGain();
+        overtoneGain.gain.setValueAtTime(0.08, now);
+
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.28, now + 0.08);
+        gainNode.gain.exponentialRampToValueAtTime(0.18, now + 0.25);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        osc1.connect(gainNode);
+        osc2.connect(overtoneGain);
+        overtoneGain.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + duration + 0.05);
+        osc2.stop(now + duration + 0.05);
+      } catch (e) {
+        console.warn('播放失敗:', e);
+      }
+    }
+
+    /*
+     * 音訊即時採樣分析迴圈 (動態識別所吹之音)
+     */
+    const buffer = new Float32Array(2048);
+
+    function processAudioLoop() {
+      if (!isListening || !analyserNode) return;
+
+      const now = performance.now();
+      const deltaTime = now - lastFrameTime;
+      lastFrameTime = now;
+
+      analyserNode.getFloatTimeDomainData(buffer);
+      drawWaveform(buffer);
+
+      const result = autoCorrelate(buffer, audioCtx.sampleRate);
+      const volPercent = Math.min(100, Math.round(result.rms * 380));
+      volumeMeterBar.style.width = `${volPercent}%`;
+
+      const isSounding = result.freq !== -1 && result.rms > 0.018;
+
+      if (isSounding) {
+        const pitch = frequencyToPitchDetails(result.freq);
+        if (pitch && pitch.inRecorderRange && pitch.closestNote) {
+          updatePitchUI(pitch);
+
+          // 自動跟隨更新直笛指法圖
+          if (currentActiveNote.id !== pitch.closestNote.id) {
+            currentActiveNote = pitch.closestNote;
+            renderRecorderFingering(currentActiveNote);
+          }
+
+          // 考試進行中採樣數據 (只要在綠色範圍 ±10¢ 就算合格，無須限定特定音)
+          if (isExamRunning) {
+            totalVoicedMs += deltaTime;
+
+            const inGreen = Math.abs(pitch.cents) <= 10; // 綠色標準範圍 (±10¢以內)
+
+            if (inGreen) {
+              greenInTuneMs += deltaTime;
+            } else {
+              if (pitch.cents > 10) sharpMs += deltaTime;
+              else if (pitch.cents < -10) flatMs += deltaTime;
+            }
+          }
+        }
+      }
+
+      // 即時更新時鐘與持穩率
+      if (isExamRunning) {
+        const totalElapsedSec = (now - examStartTimestamp) / 1000;
+        const voicedSec = totalVoicedMs / 1000;
+        timingDisplay.textContent = `${totalElapsedSec.toFixed(1)} 秒 (有效吹奏: ${voicedSec.toFixed(1)} 秒)`;
+
+        const currentRatio = totalVoicedMs > 0 ? (greenInTuneMs / totalVoicedMs) * 100 : 0;
+        liveGreenRatio.textContent = `${currentRatio.toFixed(1)} %`;
+        greenProgressBar.style.width = `${Math.min(100, currentRatio)}%`;
+      }
+
+      requestAnimationFrame(processAudioLoop);
+    }
+
+    function updatePitchUI(pitch) {
+      const { freq, cents, closestNote } = pitch;
+      const clampedCents = Math.max(-50, Math.min(50, cents));
+      const needleDeg = (clampedCents / 50) * 45;
+      tunerNeedle.style.transform = `rotate(${needleDeg}deg)`;
+
+      detectedNoteName.textContent = closestNote.name.split('/')[0].trim();
+      detectedSolfege.textContent = closestNote.solfege;
+      centsText.textContent = cents > 0 ? `+${cents} ¢` : `${cents} ¢`;
+      freqText.textContent = `當前吹奏: ${closestNote.name} (${freq} Hz / 標準: ${closestNote.freq.toFixed(1)} Hz)`;
+
+      if (Math.abs(cents) <= 10) {
+        // 完美綠色音準區 (±10¢ 以內)
+        centsText.className = 'text-xs font-mono font-black text-emerald-600 mt-2';
+        noteBadge.className = 'w-28 h-28 rounded-3xl bg-emerald-50 border-4 border-emerald-400 flex flex-col items-center justify-center shadow-md shadow-emerald-400/20 transition duration-100';
+        detectedNoteName.className = 'text-3xl font-black text-emerald-700 tracking-tight';
+        detectedSolfege.className = 'text-xs font-bold text-emerald-600 mt-0.5';
+        tunerFeedback.innerHTML = `<span class="text-emerald-700 font-black">🎯 綠色精準音準 (In-Tune ±10¢)</span>`;
+        tunerFeedback.className = 'mt-1 font-bold text-xs text-emerald-800 px-3 py-1 rounded-full bg-emerald-100 inline-block shadow-sm';
+      } else if (cents > 10) {
+        centsText.className = 'text-xs font-mono font-black text-amber-600 mt-2';
+        noteBadge.className = 'w-28 h-28 rounded-3xl bg-amber-50 border-4 border-amber-300 flex flex-col items-center justify-center shadow transition duration-100';
+        detectedNoteName.className = 'text-3xl font-black text-amber-700 tracking-tight';
+        detectedSolfege.className = 'text-xs font-bold text-amber-600 mt-0.5';
+        tunerFeedback.innerHTML = `<span class="text-amber-800 font-bold">⬆️ 音偏高，氣流放柔或嘴唇微放鬆</span>`;
+        tunerFeedback.className = 'mt-1 font-bold text-xs text-amber-800 px-3 py-1 rounded-full bg-amber-100 inline-block';
+      } else {
+        centsText.className = 'text-xs font-mono font-black text-sky-600 mt-2';
+        noteBadge.className = 'w-28 h-28 rounded-3xl bg-sky-50 border-4 border-sky-300 flex flex-col items-center justify-center shadow transition duration-100';
+        detectedNoteName.className = 'text-3xl font-black text-sky-700 tracking-tight';
+        detectedSolfege.className = 'text-xs font-bold text-sky-600 mt-0.5';
+        tunerFeedback.innerHTML = `<span class="text-sky-800 font-bold">⬇️ 音偏低，氣息稍加集中並檢查按孔閉合</span>`;
+        tunerFeedback.className = 'mt-1 font-bold text-xs text-sky-800 px-3 py-1 rounded-full bg-sky-100 inline-block';
+      }
+    }
+
+    function drawWaveform(timeData) {
+      const width = waveformCanvas.width = waveformCanvas.clientWidth * window.devicePixelRatio || 300;
+      const height = waveformCanvas.height = 40 * window.devicePixelRatio || 40;
+
+      canvasCtx.clearRect(0, 0, width, height);
+      canvasCtx.lineWidth = 2 * window.devicePixelRatio;
+      canvasCtx.strokeStyle = '#0d9488';
+      canvasCtx.beginPath();
+
+      const sliceWidth = width / timeData.length;
+      let x = 0;
+      for (let i = 0; i < timeData.length; i += 4) {
+        const v = timeData[i];
+        const y = (v + 1) / 2 * height;
+        if (i === 0) canvasCtx.moveTo(x, y);
+        else canvasCtx.lineTo(x, y);
+        x += sliceWidth * 4;
+      }
+      canvasCtx.stroke();
+    }
+
+    async function startMicrophone() {
+      try {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtxClass();
+
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: true
+          }
+        });
+
+        const source = audioCtx.createMediaStreamSource(micStream);
+        analyserNode = audioCtx.createAnalyser();
+        analyserNode.fftSize = 2048;
+
+        const biquad = audioCtx.createBiquadFilter();
+        biquad.type = 'bandpass';
+        biquad.frequency.value = 1000;
+        biquad.Q.value = 0.6;
+
+        source.connect(biquad);
+        biquad.connect(analyserNode);
+
+        isListening = true;
+        micToggleBtn.className = 'px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md transition active:scale-95';
+        micBtnText.textContent = '停止收音';
+        micIcon.className = 'fa-solid fa-microphone-slash';
+
+        lastFrameTime = performance.now();
+        processAudioLoop();
+      } catch (err) {
+        console.error('麥克風啟動失敗:', err);
+        tunerFeedback.innerHTML = `<span class="text-rose-600 font-bold">⚠️ 無法取得麥克風權限，請確認瀏覽器允許收音且在安全協定 (HTTPS / localhost) 下執行。</span>`;
+      }
+    }
+
+    function stopMicrophone() {
+      if (micStream) {
+        micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+      }
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close();
+      }
+      isListening = false;
+      micToggleBtn.className = 'px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-md transition active:scale-95';
+      micBtnText.textContent = '啟動麥克風';
+      micIcon.className = 'fa-solid fa-microphone';
+      if (isExamRunning) handleFinishExam();
+    }
+
+    function setupEventListeners() {
+      micToggleBtn.addEventListener('click', () => {
+        if (!isListening) startMicrophone();
+        else stopMicrophone();
+      });
+
+      // 教師考評三大按鈕
+      btnStartExam.addEventListener('click', handleStartExam);
+      btnFinishExam.addEventListener('click', handleFinishExam);
+      btnResetExam.addEventListener('click', handleResetExam);
+
+      // 巴洛克 / 德式 切換
+      btnBaroque.addEventListener('click', () => {
+        currentSystem = 'B';
+        btnBaroque.className = 'px-3 py-1.5 rounded-lg bg-teal-600 text-white transition';
+        btnGerman.className = 'px-3 py-1.5 rounded-lg hover:bg-slate-100 transition';
+        renderRecorderFingering(currentActiveNote);
+      });
+
+      btnGerman.addEventListener('click', () => {
+        currentSystem = 'G';
+        btnGerman.className = 'px-3 py-1.5 rounded-lg bg-teal-600 text-white transition';
+        btnBaroque.className = 'px-3 py-1.5 rounded-lg hover:bg-slate-100 transition';
+        renderRecorderFingering(currentActiveNote);
+      });
+
+      // 診斷單操作：列印、複製與關閉
+      btnPrintReport.addEventListener('click', () => {
+        window.print();
+      });
+
+      btnCopyResult.addEventListener('click', () => {
+        const text = `【國小高音直笛音準考試評測成績單】\n班級座號：${reportStudentId.textContent}\n應試學生：${reportStudentName.textContent}\n評定總分：${reportFinalScore.textContent} 分 (${reportGradeBadge.textContent.trim()})\n綠色持穩率(±10¢)：${reportGreenRatio.textContent}\n有效吹奏時長：${reportVoicedTime.textContent}\n綠色精準時長：${reportInTuneTime.textContent}\n偏高時長：${reportSharpTime.textContent}\n偏低時長：${reportFlatTime.textContent}\n專業評語與指引：${reportFeedbackText.textContent.trim()}\n測驗時間：${reportTimestamp.textContent}`;
+        
+        const tempTextarea = document.createElement('textarea');
+        tempTextarea.value = text;
+        document.body.appendChild(tempTextarea);
+        tempTextarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextarea);
+
+        btnCopyText.textContent = '已成功複製！';
+        setTimeout(() => { btnCopyText.textContent = '複製文字成績'; }, 2000);
+      });
+
+      btnModalClose.addEventListener('click', () => {
+        resultModal.classList.add('hidden');
+        handleResetExam();
+      });
+    }
+
+    window.onload = function() {
+      populateNotesGrid();
+      setActiveNote(NOTES_DATA[7]); // 預設 G5
+      setupEventListeners();
+    };
+  </script>
+</body>
+</html>
